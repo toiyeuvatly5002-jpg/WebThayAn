@@ -42,17 +42,38 @@ async function templatePanel(){
  const {template:t}=await api("templateAdmin");
  panel.innerHTML='<h2>Mẫu dùng chung</h2><p>Mẫu áp dụng cho các đề khi học sinh mở bài. Chọn tệp mới để thay thế tệp hiện tại.</p>';
  for(const [slot,label] of [["style","Định dạng LaTeX (.sty)"],["conan","Ảnh đầu câu · Conan"],["agasa","Ảnh đáp số · Agasa"]]){
- const box=document.createElement("fieldset");box.className="box";const current=t[slot],removed=current?.removed;
- box.innerHTML='<legend>'+label+'</legend><p>'+(removed?"Đã xóa":slot==="style"?h(current?.name||defaultStyle.name):'<img class="frame-icon" alt="'+slot+'" src="'+h(current||templateImages[slot])+'">')+'</p><input aria-label="Chọn tệp thay thế" type="file" accept="'+(slot==="style"?".sty":".png")+'"> <button type="button">Xóa</button> <span role="status"></span>';panel.append(box);
- const input=box.querySelector("input"),del=box.querySelector("button"),msg=box.querySelector("span");
- async function save(remove){input.disabled=del.disabled=true;try{
- let value=null;
- if(!remove){const f=input.files[0];if(!f)return;
- if(slot==="style"){if(!/\.sty$/i.test(f.name)||f.size>180000)throw Error("Chọn tệp .sty tối đa 180 KB.");const source=await f.text();value={...readFrameStyle(source,f.name),source}}
- else value=await smallImage(f)}
- await api("setTemplate",{slot,value});await templatePanel();message.textContent=remove?"Đã xóa khỏi mẫu chung.":"Đã thay tệp dùng chung.";
- }catch(e){msg.textContent=e.message}finally{input.disabled=del.disabled=false}}
- input.onchange=()=>save(false);del.disabled=!!removed;del.onclick=()=>{if(confirm("Xóa mục này khỏi mẫu chung?"))save(true)};
+ const box=document.createElement("fieldset");
+ box.className="box";
+ box.innerHTML='<legend>'+label+'</legend><p class="current"></p><label>Thay bằng tệp mới <input type="file" accept="'+(slot==="style"?".sty":".png")+'"></label> <button type="button">Xóa</button><p role="status" aria-live="polite"></p>';
+ panel.append(box);
+ const input=box.querySelector("input"),del=box.querySelector("button"),msg=box.querySelector("[role=status]");
+ let current=t[slot];
+ function showCurrent(){
+  const display=box.querySelector(".current");
+  if(current?.removed){display.textContent="Đã xóa khỏi mẫu chung.";return}
+  display.textContent=current?"Đang dùng bản đã tải lên · ":"Đang dùng bản mặc định · ";
+  if(slot==="style"){display.append(current?.name||defaultStyle.name);return}
+  const img=document.createElement("img");
+  img.className="frame-icon";img.alt=slot;img.src=current||templateImages[slot];display.append(img);
+ }
+ showCurrent();del.disabled=!!current?.removed;
+ async function save(remove){
+  const file=input.files[0];if(!remove&&!file)return;
+  input.disabled=del.disabled=true;msg.textContent=remove?"Đang xóa…":"Đang lưu "+file.name+"…";
+  try{
+   let value=null;
+   if(!remove && slot==="style"){
+    if(!/\.sty$/i.test(file.name)||file.size>180000)throw Error("Chọn tệp .sty tối đa 180 KB.");
+    const source=await file.text();value={...readFrameStyle(source,file.name),source};
+   }else if(!remove){value=await smallImage(file)}
+   await api("setTemplate",{slot,value});
+   current=remove?{removed:true}:value;
+   showCurrent();msg.textContent=remove?"Đã xóa.":"Đã lưu "+file.name+" vào mẫu dùng chung.";
+  }catch(e){msg.textContent="Chưa xác nhận lưu thành công. "+e.message}
+  finally{input.disabled=false;del.disabled=!!current?.removed;if(remove||msg.textContent.startsWith("Chưa"))input.value=""}
+ }
+ input.onchange=()=>save(false);
+ del.onclick=()=>{if(confirm("Xóa mục này khỏi mẫu chung?"))save(true)};
  }
  }catch(e){notifyError(e)}
 }
