@@ -1,5 +1,5 @@
 [build]
-  command = "node tools/verify.cjs && node tools/verify-tikz.cjs"
+  command = "node tools/verify.cjs && node tools/verify-mixed.cjs && node tools/verify-tikz.cjs"
   publish = "public"
   functions = "netlify/functions"
 

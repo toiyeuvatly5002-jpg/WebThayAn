@@ -3,7 +3,7 @@ const {subjects,tracks,categories,kind}=require("./public/catalog");
 const {grade}=require("./grade.cjs");
 const fail=(status,message)=>{throw Object.assign(Error(message),{status})};
 const hash=s=>crypto.createHash("sha256").update(s).digest("hex");
-const adminActions=["accounts","issue","publish","report","templateAdmin","setTemplate"];
+const adminActions=["accounts","issue","publish","report","templateAdmin","setTemplate","gradingQueue","gradingPaper","approveGrade"];
 function seed(admin,student){
  if(!/^\d{5}$/.test(admin)||student===admin)throw Error("Cần cấu hình mã admin 5 số riêng");
  const users={[admin]:{name:"Thầy An",role:"admin"}};
@@ -21,7 +21,7 @@ function sharedArt(template={},legacy={}){
  }
  return art;
 }
-function cleanItem(item){const {questions,answerSheet,prompts,art,solutions,...rest}=item;return {...rest,count:answerSheet?.length??questions?.length??(item.type==="original"?28:0)}}
+function cleanItem(item){const {questions,answerSheet,prompts,art,solutions,pdfs,...rest}=item;return {...rest,count:answerSheet?.length??questions?.length??(item.type==="original"?28:0)}}
 function run(db,action,b,token,address){
  const now=Date.now(); db.items??=[];
  if(action==="login"){
@@ -65,14 +65,18 @@ function run(db,action,b,token,address){
  if(type==="link"){if(typeof url!=="string"||!/^https:\/\//i.test(url)||url.length>2048)fail(400,"Cần liên kết HTTPS.");item.url=url}
  else if(type==="sheet"||type==="paired"){
  const list=b.answerSheet;
- if((type==="sheet"&&(typeof url!=="string"||!/^https:\/\//i.test(url)||url.length>2048))||!Array.isArray(list)||!list.length||list.length>100||list.some(v=>typeof v!=="string"||v.length>40||!/^([A-D]|[ĐS]{4}|[-+]?\d+(?:[.,]\d+)?)$/.test(v)))fail(400,"Kiểm tra liên kết PDF và bảng đáp án.");
+ if((type==="sheet"&&(typeof url!=="string"||!/^https:\/\//i.test(url)||url.length>2048))||!Array.isArray(list)||!list.length||list.some(v=>typeof v!=="string"||v.length>40||(v==="TL"?type!=="paired":!/^([A-D]|[ĐS]{4}|[-+]?\d+(?:[.,]\d+)?)$/.test(v))))fail(400,"Kiểm tra liên kết PDF và bảng đáp án.");
  if(type==="paired"){
  if(!Array.isArray(b.prompts)||b.prompts.length!==list.length||b.prompts.some(s=>typeof s!=="string"||!s.trim()||s.length>240000))fail(400,"Nội dung câu không khớp đáp án.");
+ if(b.pdfs!=null){
+  if(!Array.isArray(b.pdfs)||b.pdfs.length!==2||b.pdfs.some(p=>typeof p!=="string"||!/^JVBERi0[A-Za-z0-9+/]+=*$/.test(p)))fail(400,"PDF đề hoặc lời giải không hợp lệ.");
+  item.pdfs=b.pdfs;
+ }
  item.prompts=b.prompts;
  }else item.url=url;
- item.answerSheet=list;item.fields=list.map(v=>/^[A-D]$/.test(v)?"mc":/^[ĐS]{4}$/.test(v)?"tf":"num");
+ item.answerSheet=list;item.fields=list.map(v=>v==="TL"?"essay":/^[A-D]$/.test(v)?"mc":/^[ĐS]{4}$/.test(v)?"tf":"num");
  }
- else if(type==="quiz"&&Array.isArray(questions)&&questions.length&&questions.length<=100){
+ else if(type==="quiz"&&Array.isArray(questions)&&questions.length){
  item.questions=questions.map(q=>{if(typeof q.text!=="string"||!q.text.trim()||q.text.length>4000||!Array.isArray(q.options)||q.options.length!==4||q.options.some(o=>typeof o!=="string"||!o.trim()||o.length>1000)||!Number.isInteger(q.key)||q.key<0||q.key>3)fail(400,"Cần 4 lựa chọn và đáp án hợp lệ.");return {text:q.text,options:q.options,key:q.key}})
  }else fail(400,"Chọn tài liệu hoặc đề trắc nghiệm.");
  if(b.solutions!=null){
@@ -82,28 +86,45 @@ function run(db,action,b,token,address){
  }
  db.items.push(item);return {id:item.id};
  }
+ if(action==="gradingQueue")return {rows:Object.entries(db.results).filter(([,r])=>r.status==="pending").map(([attempt,r])=>({attempt,title:r.title,code:r.code,name:r.name,date:r.date}))};
+ if(action==="gradingPaper"||action==="approveGrade"){
+  const r=db.results[b.attempt];
+  if(!r||r.status!=="pending")fail(409,"Bài đã được duyệt hoặc không còn chờ chấm.");
+  const paper=db.items.find(item=>item.id===r.id);
+  if(!paper)fail(404,"Không tìm thấy đề.");
+  const essay=paper.fields.flatMap((type,i)=>type==="essay"?[i]:[]);
+  const max=10/paper.fields.reduce((sum,t)=>sum+(t==="tf"?1:.25),0)*.25;
+  if(action==="gradingPaper")return {title:r.title,name:r.name,code:r.code,photos:r.photos,essay,max,paperPdf:paper.pdfs?.[0],auto:r.points.reduce((a,b)=>a+b,0),prompts:paper.prompts};
+  if(!Array.isArray(b.fractions)||b.fractions.length!==essay.length||b.fractions.some(n=>!Number.isFinite(n)||n<0||n>100))fail(400,"Điểm tự luận phải từ 0 đến 100%.");
+  essay.forEach((i,j)=>r.points[i]=max*b.fractions[j]/100);
+  r.total=+r.points.reduce((a,b)=>a+b,0).toFixed(2);
+  r.status="approved";r.gradedBy=code;r.gradedAt=now;delete r.photos;
+  return {total:r.total};
+ }
  if(action==="report"||action==="history"){
  let rows=Object.entries(db.results).map(([attempt,r])=>({...r,attempt})).filter(r=>action==="report"?(!b.code||r.code===b.code):r.code===code);
  rows=rows.filter(r=>b.group?r.group===b.group:r.group!=="periodic");
- return {rows:rows.map(({answers,keys,points,code:owner,...summary})=>({...summary,code:owner})).sort((a,b)=>b.date-a.date)}
+ return {rows:rows.map(({answers,keys,points,photos,code:owner,...summary})=>({...summary,code:owner})).sort((a,b)=>b.date-a.date)}
  }
  if(action==="review"){
  const r=db.results[b.attempt];
  if(!r||r.code!==code)fail(404,"Không tìm thấy lượt làm của bạn.");
+ if(r.status==="pending")fail(409,"Bài đang chờ giáo viên duyệt điểm.");
  const paper=db.items.find(x=>x.id===r.id);
- return {title:r.title,score:r.total,answers:r.answers,keys:r.keys,points:r.points,solutions:paper?.solutions||(paper?.type==="original"?require("./legacy-solutions.json"):[]),prompts:paper?.prompts||paper?.questions?.map(q=>q.text)||[]};
+ return {title:r.title,score:r.total,solutionPdf:paper?.pdfs?.[1],answers:r.answers,keys:r.keys,points:r.points,solutions:paper?.solutions||(paper?.type==="original"?require("./legacy-solutions.json"):[]),prompts:paper?.prompts||paper?.questions?.map(q=>q.text)||[]};
  }
  const item=db.items.find(it=>it.id===b.id);if(!item)fail(404,"Không tìm thấy bài.");
- if(action==="open")return {...cleanItem(item),art:sharedArt(db.template,item.art),prompts:item.prompts,questions:item.questions?.map(({key,...q})=>q)};
+ if(action==="open")return {...cleanItem(item),paperPdf:item.pdfs?.[0],art:sharedArt(db.template,item.art),prompts:item.prompts,questions:item.questions?.map(({key,...q})=>q)};
  if(action==="submit"){
  if(!/^[\w-]{12,80}$/.test(b.attemptId))fail(400,"Mã lượt làm chưa hợp lệ.");
- const id=code+"_"+item.id+"_"+b.attemptId;if(db.results[id])return {...db.results[id],attempt:id};
+ const id=code+"_"+item.id+"_"+b.attemptId;if(db.results[id])return submissionReceipt(db.results[id],id);
  if(!Array.isArray(b.answers)||b.answers.some(x=>typeof x!=="string"||x.length>80))fail(400,"Bài làm không hợp lệ.");
  let result;
  if(item.type==="original")result=grade(b.answers);
  else if(["sheet","paired"].includes(item.type)&&item.answerSheet.length===b.answers.length){
  const keys=item.answerSheet, weights=item.fields.map(t=>t==="tf"?1:.25),max=weights.reduce((a,x)=>a+x,0);
  const points=keys.map((k,i)=>{const v=b.answers[i].trim();
+ if(item.fields[i]==="essay")return 0;
  if(item.fields[i]==="tf")return [0,.1,.25,.5,1][Array.from(k).filter((x,j)=>v[j]===x).length]*10/max;
  const correct=item.fields[i]==="num"?/^[-+]?\d+(?:[.,]\d+)?$/.test(v)&&Number(v.replace(",","."))===Number(k.replace(",",".")):v===k;
  return correct?weights[i]*10/max:0});
@@ -113,11 +134,22 @@ function run(db,action,b,token,address){
  const keys=item.questions.map(q=>"ABCD"[q.key]),points=keys.map((k,i)=>b.answers[i]===k?10/keys.length:0);
  result={keys,points,total:+points.reduce((a,b)=>a+b,0).toFixed(2)}
  }else fail(400,"Bài làm không hợp lệ.");
- db.results[id]={...result,code,name:user.name,title:item.title,id:item.id,date:now,group:kind(item.track,item.category),answers:b.answers}; return {...db.results[id],attempt:id};
+ if(item.fields?.includes("essay")){
+  const photos={};
+  for(const [i,t] of item.fields.entries()){
+   if(t!=="essay")continue;
+   const pages=b.photos?.[i];
+   if(!Array.isArray(pages)||!pages.length||pages.some(p=>typeof p!=="string"||!/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]+=*$/.test(p)))fail(400,"Thiếu ảnh JPEG hợp lệ ở câu "+(i+1)+".");
+   photos[i]=pages;
+  }
+  Object.assign(result,{photos,status:"pending"});delete result.total;
+ }
+ db.results[id]={...result,code,name:user.name,title:item.title,id:item.id,date:now,group:kind(item.track,item.category),answers:b.answers}; return submissionReceipt(db.results[id],id);
  }
  fail(404,"Không có thao tác này.");
 }
-module.exports={run,seed};
+function submissionReceipt(r,attempt){return r.status==="pending"?{status:"pending",attempt}:{...r,attempt}}
+module.exports={run,seed,submissionReceipt};
 
 
 

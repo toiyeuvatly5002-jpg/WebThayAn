@@ -7,7 +7,7 @@ async function handle(event,local=false){
  const headers={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"};
  try{
  if(event.httpMethod!=="POST")throw Object.assign(Error("Dùng POST."),{status:405});
- if((event.body||"").length>800000)throw Object.assign(Error("Dữ liệu quá lớn."),{status:413});
+ if((event.body||"").length>4500000)throw Object.assign(Error("Dữ liệu quá lớn."),{status:413});
  const {action,...body}=JSON.parse(event.body||"{}"), h=event.headers||{};
  operation=action; const token=(h.cookie||"").match(/(?:^|; )ph_session=([a-f0-9]{64})/)?.[1];
  let result;

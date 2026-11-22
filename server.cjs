@@ -4,7 +4,7 @@ const root=path.join(__dirname,"public");
 http.createServer(async(req,res)=>{
  try{
   if(req.url==="/.netlify/functions/school"){
-   let body="";for await(const chunk of req){body+=chunk;if(body.length>800000)throw Error()}
+   let body="";for await(const chunk of req){body+=chunk;if(body.length>4500000)throw Error()}
    const result=await require("./api.cjs").handle({httpMethod:req.method,headers:req.headers,body},true);
    res.writeHead(result.statusCode,result.headers);return res.end(result.body);
   }  const url=new URL(req.url,"http://localhost");

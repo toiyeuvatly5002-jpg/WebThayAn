@@ -17,7 +17,7 @@ function parseQuizTex(source){
  if(/\\(?:begin\{(?:tikzpicture|cautlngan|bangdungsai|figure|tabular)\}|includegraphics|input\b|choiceTF|shortans)|\\noindent\s*\\textbf\{Sử dụng/i.test(text))throw Error("Đề có hình, dữ kiện chung hoặc nhiều dạng câu. Hãy dùng ‘PDF Drive + phiếu trả lời’ để giữ nguyên đề.");
  const blocks=[...text.matchAll(/\\begin\{(ex|cauhoi)\}(?:\[\d+\])?([\s\S]*?)\\end\{\1\}/g)];
  const chunks=blocks.length?blocks.map((m,i)=>m[2]+"\n"+(text.slice(m.index+m[0].length,blocks[i+1]?.index??text.length).match(/^\s*(%?\s*Đáp án(?: đúng)?\s*[:：][^\n]+)/i)?.[1]||"")):text.split(/(?=^\s*Câu\s+\d+\s*[.:)])/gmi).filter(s=>s.trim());
- if(!chunks.length||chunks.length>100)throw Error("Cần từ 1 đến 100 câu.");
+ if(!chunks.length)throw Error("Đề cần có ít nhất một câu.");
  return chunks.map((chunk,i)=>{
  try{
  const markers=[...chunk.matchAll(/(?:^|\n)\s*%?\s*Đáp án(?: đúng)?\s*[:：]\s*([A-D])\s*\.?\s*(?=\n|$)/gi)].map(m=>m[1].toUpperCase());
@@ -52,7 +52,7 @@ function sheetKeys(text){
  }else for(const raw of text.trim().split(/\n/)){
  const v=raw.trim().replace(/^(?:Câu\s*)?\d+\s*[.):]\s+/i,"").replace(/^(?:%\s*)?Đáp án(?: đúng)?\s*[:：]\s*/i,"").trim().toUpperCase();if(v)rows.push(v)
  }
- if(!rows.length||rows.length>100||rows.some(v=>!/^([A-D]|[ĐS]{4}|[-+]?\d+(?:[.,]\d+)?)$/.test(v)))throw Error("Nhập mỗi đáp án trên một dòng: B, SĐĐS hoặc 6,6; hoặc chọn bảng đáp án TeX của Thầy An.");
+ if(!rows.length||rows.some(v=>!/^(TL|[A-D]|[ĐS]{4}|[-+]?\d+(?:[.,]\d+)?)$/.test(v)))throw Error("Nhập mỗi đáp án trên một dòng: B, SĐĐS hoặc 6,6; hoặc chọn bảng đáp án TeX của Thầy An.");
  return rows;
 }
 function mathText(value){
