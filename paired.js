@@ -1,3 +1,24 @@
+function keysFromSolutions(paper, worked) {
+ const questions = splitPaper(paper);
+ const answers = splitPaper(worked);
+ const solutions = parseSolutions(worked, questions.length);
+ if (!solutions || answers.length !== questions.length) throw Error("Kiểm tra số câu trong đề và tệp lời giải.");
+ return questions.map((question, i) => {
+   const fail = () => { throw Error("Kiểm tra câu "+(i+1)+" trong tệp lời giải."); };
+   const stem = block => latexArgs(block.src.split(/\\noidung\s*/)[1] || "", 1)[0].replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}|\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/g,"").replace(/\s+/g," ").trim();
+   if (question.type !== answers[i].type || stem(question) !== stem(answers[i])) fail();
+   const solution = solutions[i];
+   if (/\\phatbieuDS\b/.test(question.src)) {
+     const parts = [...solution.matchAll(/([abcd])\)\s*\\textbf\{(Đúng|Sai)[.!]?\}/gi)];
+     if (parts.map(x=>x[1].toLowerCase()).join("") !== "abcd") fail();
+     return parts.map(x=>x[2].toLowerCase()==="đúng"?"Đ":"S").join("");
+   }
+   const pattern = question.type === "cautlngan" ? /Trả lời ngắn\s*:\s*([-+]?\d+(?:[.,]\d+)?)\s*\}/gi : /(?:Chọn\s+|Đáp án(?: đúng)?\s*:\s*)([A-D])\s*[.!]?\s*\}/gi;
+   const matches = [...solution.matchAll(pattern)];
+   if (matches.length !== 1) fail();
+   return matches[0][1].toUpperCase();
+ }).join("\n");
+}
 function splitPaper(source){
  const body=source.replace(/\r/g,"").replace(/(?<!\\)%[^\n]*/g,"");
  const blocks=[...body.matchAll(/\\begin\{(cauhoi|cautlngan|ex)\}(?:\[\d+\])?([\s\S]*?)\\end\{\1\}/g)];
@@ -40,11 +61,11 @@ function pairedPrompt(text,art){
  return inlineArt(mathText(text),art).replace(/\[\[diagram:([A-Za-z0-9+/=]+)\]\]/g,(_,data)=>'<img style="max-width:100%;height:auto" alt="Hình TikZ" src="data:image/svg+xml;base64,'+data+'">').replace(/\[\[paper-image:(\d+)\]\]/g,"Hình cũ cần được giáo viên nhập lại từ TeX.");
 }
 function pairedEditor(onRead){
- content.innerHTML='<section class="importer">'+field("TeX đề",'<textarea id="pairPaper" rows="8" placeholder="Dán nội dung đề tại đây"></textarea>')+field("TeX đáp án",'<textarea id="pairKeys" rows="5" placeholder="Dán bảng DapAn…tex hoặc mỗi đáp án một dòng"></textarea>')+'<button type="button" id="pairCheck">Đọc và kiểm tra</button><div id="pairPreview" role="status"></div></section>';
+ content.innerHTML='<section class="importer">'+field("TeX đề",'<textarea id="pairPaper" rows="8" placeholder="Dán nội dung đề tại đây"></textarea>')+field("TeX đáp án (bỏ trống để lấy từ tệp lời giải bên dưới)",'<textarea id="pairKeys" rows="5" placeholder="Dán bảng DapAn…tex hoặc mỗi đáp án một dòng"></textarea>')+'<button type="button" id="pairCheck">Đọc và kiểm tra</button><div id="pairPreview" role="status"></div></section>';
  let version=0;
  function reset(){version++;onRead(null);pairPreview.textContent="";}
- pairPaper.oninput=pairKeys.oninput=reset;
- pairCheck.onclick=async()=>{reset();const id=version;try{const data=await pairedPaper(pairPaper.value,pairKeys.value);if(id!==version)return;onRead(data);pairPreview.innerHTML=data.keys.map((k,i)=>'<details class="keyChip"><summary>Câu '+(i+1)+' · '+h(k)+'</summary>'+pairedPrompt(data.prompts[i],defaultStyle)+'</details>').join("")}catch(e){if(id===version)pairPreview.textContent=e.message}};
+ pairPaper.oninput=pairKeys.oninput=reset;document.querySelector("#solutionSource").addEventListener("input",()=>{if(pairPaper.isConnected)reset()});
+ pairCheck.onclick=async()=>{reset();const id=version;try{const keys=pairKeys.value.trim() || keysFromSolutions(pairPaper.value,document.querySelector("#solutionSource").value);const data=await pairedPaper(pairPaper.value,keys);if(id!==version)return;onRead(data);pairPreview.innerHTML=data.keys.map((k,i)=>'<details class="keyChip"><summary>Câu '+(i+1)+' · '+h(k)+'</summary>'+pairedPrompt(data.prompts[i],defaultStyle)+'</details>').join("")}catch(e){if(id===version)pairPreview.textContent=e.message}};
 }
 
 
