@@ -1,0 +1,817 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{ShortKhaiBao}[2025/06/30 Gói cấu hình cho tài liệu Khí lí tưởng]
+
+% --- Các gói cần thiết ---
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T1]{fontenc} % Thêm dòng này để hỗ trợ tiếng Việt tốt hơn
+\RequirePackage[vietnamese]{babel}
+\RequirePackage[left=2.0cm, right=2.0cm, top=2.5cm, bottom=2.5cm, twoside]{geometry}
+\RequirePackage{tikz, amsmath, amsfonts, amssymb, graphicx, fancyhdr, enumitem, tasks, float, subcaption, tabularx, longtable, booktabs, makecell, esvect, mathtools, hyperref, etoolbox, environ, mathrsfs}
+\RequirePackage{ifthen}
+\RequirePackage{xparse}
+\RequirePackage{array}
+\RequirePackage{bm}
+\RequirePackage{varwidth}
+\RequirePackage{multido}
+\RequirePackage{wrapfig}
+\RequirePackage[version=4]{mhchem}
+\RequirePackage{titletoc}
+\graphicspath{{HinhAnh/}}
+\RequirePackage{xcolor}
+\RequirePackage{titlesec}
+\usetikzlibrary{calc, positioning, fit, shapes.misc, arrows.meta}
+\newcommand{\QuaBaiMoi}{%
+	\stopcontents    % Khóa chặn không cho section bài cũ chạy tiếp
+	\startcontents   % Bật gom section ngay lập tức cho bài tiếp theo
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% BỘ ĐẾM BÀI
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\RequirePackage{tcolorbox}
+\tcbuselibrary{most, breakable}
+\usetikzlibrary{shapes.misc, decorations.pathmorphing, decorations.markings}
+\definecolor{lineblue}{RGB}{0, 114, 187}  % Màu xanh đường kẻ
+\definecolor{numpink}{RGB}{236, 88, 142}   % Màu hồng
+\definecolor{myred}{RGB}{230, 0, 0}        % Màu đỏ
+\definecolor{titleblue}{RGB}{0, 0, 205}     % Màu xanh tiêu đề Bài
+\definecolor{myorange}{RGB}{20, 115, 230}       % Màu xanh nước biển nổi bật (thay cho myorange - làm viền & chữ)
+\definecolor{mygreen}{RGB}{0, 153, 76}         % Giữ nguyên màu xanh lá cho subsubsection
+\definecolor{bglightorange}{RGB}{230, 242, 255}  % Nền khung chứa chữ xanh biển nhạt
+\definecolor{bgcard}{RGB}{242, 247, 252}         % Nền thẻ/phát biểu xanh rất nhạt
+\definecolor{bordercard}{RGB}{215, 228, 240}     % Viền nhẹ cho các thẻ
+\definecolor{outerbg}{RGB}{220, 238, 255}        % Nền khung lớn bên ngoài (Xanh pastel nhạt)
+\definecolor{blueSection}{RGB}{10, 60, 140}      % Xanh biển đậm (Section - Cấp lớn nhất)
+\definecolor{blueSubSection}{RGB}{25, 110, 200}   % Xanh biển vừa (Subsection)
+\definecolor{blueSubSubSection}{RGB}{50, 160, 235}% Xanh biển tươi/nhạt hơn (Subsubsection - Cấp nhỏ nhất)
+% 2. Định nghĩa màu xanh đậm hơn dựa trên outerbg để chữ in đậm nổi bật, dễ đọc
+\definecolor{boldblue}{RGB}{20, 90, 170}
+
+
+
+\definecolor{bottomlinecolor}{RGB}{91, 126, 145}
+\tcbset{
+	quantum_box_style/.style={
+		enhanced,
+		empty,
+		width=\textwidth,
+		enlarge left by=0mm,
+		enlarge right by=0mm,
+		top=10mm,
+		bottom=2mm,
+		left=0mm,
+		right=0mm,
+		borderline north={1.5pt}{5.5pt}{red},
+		borderline south={1.5pt}{0pt}{bottomlinecolor},
+		fonttitle=\bfseries\normalsize,
+		coltitle=black,
+		fontupper=\linespread{1.3}\selectfont,
+		attach boxed title to top left={xshift=-1pt,yshift=-30pt},
+		boxed title style={
+			empty,
+			left=0mm,
+			right=30mm,
+			top=0.95mm,
+			bottom=0mm,
+			underlay={
+				\fill[left color=blue!40,right color=white]
+				(interior.south west)
+				rectangle
+				(interior.north east);
+			}
+		},
+		breakable
+	}
+}
+\newcounter{muc}
+\newtcolorbox{vd}[1][]{
+	quantum_box_style,
+	title={\stepcounter{muc}Ví dụ~\themuc\ifstrempty{#1}{}{: #1}},
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Bìa
+% --- LỆNH TẠO TRANG BÌA ---
+\newcommand{\bia}{%
+	\begin{titlepage}
+		% Vẽ khung viền đôi toàn trang
+		\begin{tikzpicture}[remember picture, overlay]
+			% Khung mảnh phía ngoài cùng
+			\draw[line width=0.7pt] 
+			([xshift=2.5cm, yshift=-2.7cm]current page.north west) 
+			rectangle 
+			([xshift=-2.5cm, yshift=2.7cm]current page.south east);
+			
+			% Khung dày phía trong (cách khung ngoài 2mm)
+			\draw[line width=2.5pt] 
+			([xshift=2.7cm, yshift=-2.9cm]current page.north west) 
+			rectangle 
+			([xshift=-2.7cm, yshift=2.9cm]current page.south east);
+		\end{tikzpicture}
+		
+		\vspace{-0.4cm}
+		
+		\begin{center}
+			\begin{minipage}[c]{0.13\textwidth}
+				\chenhinh{HinhAnh/hinh1}{1}%
+			\end{minipage}%
+			\hspace*{0.4cm}%
+			\begin{minipage}[c]{0.65\textwidth}
+				\centering
+				{\fontsize{15pt}{18pt}\selectfont \oldtextbf{BỘ GIÁO DỤC VÀ ĐÀO TẠO}}
+			\end{minipage}
+		\end{center}
+		
+		\begin{center}
+			\vspace{0.6cm}
+			
+			% Tên tác giả (màu myred)
+			{\color{myred}\fontsize{24pt}{28pt}\selectfont \oldtextbf{Tiêu Thuận An} \\}
+			
+			\vspace{1.2cm}
+			\begin{flushleft} 
+				\hspace*{1.5cm}%
+				{\color{blueSubSection}\fontsize{20pt}{28pt}\selectfont \oldtextbf{Chương 3} \\}
+			\end{flushleft}
+			\vspace{-0.2cm}
+			
+			% Tên chương (màu myred)
+			{\color{myred}\fontsize{36pt}{28pt}\selectfont \oldtextbf{TỪ TRƯỜNG} \\}
+			
+			\vspace{0.5cm}
+			
+			% Tài liệu lưu hành nội bộ (màu đen)
+			{\color{blueSubSection}\fontsize{13pt}{16pt}\selectfont \oldtextbf{(TÀI LIỆU LƯU HÀNH NỘI BỘ)} \\}
+			\vspace{1.5cm}
+			\chenhinh{HinhAnh/1}{0.7}
+			\vfill
+			
+			% Địa danh và thời gian (màu đen)
+			{\fontsize{18pt}{16pt}\selectfont \oldtextbf{Đồng Tháp - 6/2026} \\}
+			\vspace{1cm}
+		\end{center}
+	\end{titlepage}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Bìa
+
+% 3. Đổi tất cả lệnh \textbf thành chữ in đậm có màu xanh
+\let\oldtextbf\textbf
+\renewcommand{\textbf}[1]{\oldtextbf{\color{boldblue}#1}}
+
+\let\oldbm\bm
+\renewcommand{\bm}[1]{\textcolor{boldblue}{\oldbm{#1}}}
+
+% --- CẤU HÌNH TITLEFORMAT ---
+\titleformat{\section}
+{\normalfont\Large\bfseries\color{blueSection}}{\thesection}{1em}{}
+
+\titleformat{\subsection}
+{\normalfont\large\bfseries\color{blueSubSection}}{\thesubsection}{1em}{}
+
+\titleformat{\subsubsection}
+{\normalfont\normalsize\bfseries\color{blueSubSubSection}}{\thesubsubsection}{1em}{}
+\newcounter{bai}
+
+\renewcommand{\thesection}{\thebai.\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+	
+	\setcounter{tocdepth}{2}
+	\setcounter{secnumdepth}{2}
+% --- CẤU HÌNH HEADER MỚI ---
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headwidth}{\textwidth}
+
+% Hai biến chứa nội dung sẽ được nhập từ file chính
+\newcommand{\TenChuong}{}
+\newcommand{\SoChuong}{}
+
+% Lệnh \SetHeader giờ chỉ nhận 2 tham số: Tên chương và Số chương
+\newcommand{\SetHeader}[2]{%
+	\renewcommand{\TenChuong}{#1}%
+	\renewcommand{\SoChuong}{#2}%
+} % <--- ĐÂY LÀ DẤU NGOẶC ĐÓNG QUAN TRỌNG BỊ THIẾU
+
+% Mặc định nếu chưa gọi ở file chính
+\SetHeader{}{}
+
+% --- ĐỊNH NGHĨA MÀU SẮC ---
+\definecolor{blueNavy}{RGB}{10, 60, 140}     % Xanh nước biển đậm (cho headrule)
+\definecolor{blueLight}{RGB}{100, 160, 220}  % Xanh nước biển nhạt (cho hrule ở footer)
+\definecolor{redText}{RGB}{200, 30, 30}      % Màu đỏ (cho dòng chữ copyright)
+
+% --- LỆNH TIKZ VẼ HEADER TRANG LẺ (Khối màu bên phải) ---
+% --- LỆNH TIKZ VẼ HEADER TRANG LẺ (Khối màu bên phải) ---
+\newcommand{\HeaderTrangLe}{%
+	\begin{tikzpicture}[baseline={([yshift=4pt]chuongbox.base)}, every node/.style={inner sep=0pt, outer sep=0pt}]
+		% Khối chứa chữ "Chương..." nằm bên phải
+		\node[
+		fill=blueNavy,           
+		text=white,              
+		font=\bfseries\normalsize,
+		minimum width=3.5cm,     
+		minimum height=0.75cm,   
+		inner xsep=10pt,         
+		align=center
+		] (chuongbox) {\SoChuong};
+		
+		% Tên chương nằm bên trái khối màu
+		\node[
+		left=8pt of chuongbox,   
+		text=blueSubSection,     
+		font=\bfseries\normalsize,
+		anchor=east
+		] {\TenChuong};
+	\end{tikzpicture}%
+}
+
+% --- LỆNH TIKZ VẼ HEADER TRANG CHẴN (Khối màu bên trái) ---
+\newcommand{\HeaderTrangChan}{%
+	\begin{tikzpicture}[baseline={([yshift=4pt]chuongbox.base)}, every node/.style={inner sep=0pt, outer sep=0pt}]
+		% Khối chứa chữ "Chương..." nằm bên trái
+		\node[
+		fill=blueNavy,           
+		text=white,              
+		font=\bfseries\normalsize,
+		minimum width=3.5cm,     
+		minimum height=0.75cm,   
+		inner xsep=10pt,         
+		align=center
+		] (chuongbox) {\SoChuong};
+		
+		% Tên chương nằm bên phải khối màu
+		\node[
+		right=8pt of chuongbox,  
+		text=blueSubSection,     
+		font=\bfseries\normalsize,
+		anchor=west
+		] {\TenChuong};
+	\end{tikzpicture}%
+}
+
+% Hiển thị header
+\fancyhead[RO]{\HeaderTrangLe}   % Trang lẻ: Header dồn về góc phải
+\fancyhead[LE]{\HeaderTrangChan} % Trang chẵn: Header dồn về góc trái
+\fancyhead[LO]{} % Xóa các góc còn lại
+\fancyhead[RE]{}
+
+% Đường kẻ dưới Header
+\renewcommand{\headrulewidth}{1.5pt}
+\let\oldheadrule\headrule
+\renewcommand{\headrule}{{\color{blueNavy}\oldheadrule}}
+
+% --- LỆNH TIKZ VẼ KHUNG SỐ TRANG (TRANG LẺ - TRÁI) ---
+\newcommand{\VeSoTrangTrai}{%
+	\begin{tikzpicture}[remember picture, overlay]
+		\node[
+		fill=blueNavy,           
+		text=white,              
+		font=\bfseries\normalsize,
+		minimum width=1.8cm,     
+		minimum height=0.7cm,    
+		anchor=west,             
+		align=right,             
+		text width=1.6cm,        
+		inner sep=0pt,           
+		inner xsep=6pt           
+		] at ([xshift=-0.5cm, yshift=2.5cm]current page.south west) {\thepage}; 
+	\end{tikzpicture}%
+}
+
+% --- LỆNH TIKZ VẼ KHUNG SỐ TRANG (TRANG CHẴN - PHẢI) ---
+\newcommand{\VeSoTrangPhai}{%
+	\begin{tikzpicture}[remember picture, overlay]
+		\node[
+		fill=blueNavy,           
+		text=white,              
+		font=\bfseries\normalsize,
+		minimum width=1.8cm,     
+		minimum height=0.7cm,    
+		anchor=east,             
+		align=left,              
+		text width=1.6cm,        
+		inner sep=0pt,           
+		inner xsep=6pt           
+		] at ([xshift=0.5cm, yshift=2.5cm]current page.south east) {\thepage};
+	\end{tikzpicture}%
+}
+
+% --- CẬP NHẬT LẠI FOOTER ---
+\fancyfoot[RO]{% Trang lẻ (Odd) - mép trái
+	\VeSoTrangTrai% 
+	\vbox{%
+		{\color{blueLight}\hrule height 0.8pt}%
+		\vspace{0.2cm}%
+		\noindent{\color{myred}\copyright\ 2026 Tiêu Thuận An\qquad All rights reserved.}%
+	}%
+}
+
+\fancyfoot[LE]{% Trang chẵn (Even) - mép phải
+	\VeSoTrangPhai%
+	\vbox{%
+		{\color{blueLight}\hrule height 0.8pt}%
+		\vspace{0.2cm}%
+		\noindent{\color{myred}\copyright\ 2026 Tiêu Thuận An\qquad All rights reserved.}%
+	}%
+}
+
+\newcommand{\hdg}{%
+	\par\vspace{4pt}%
+	\noindent\textcolor{lineblue}{\textit{\textbf{Hướng dẫn giải}}}\par\vspace{0.3cm}%
+}
+
+\newcommand{\giai}[1]{%
+	\begin{align*}
+		#1
+	\end{align*}%
+}
+
+\renewcommand{\footrulewidth}{0pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%code câu hỏi và phương án trắc nghiệm
+% Khai báo biến đếm
+\newcounter{cauhoi}
+
+% --- 3. LỆNH VẼ KHUNG CÂU HỎI (Dùng \newcommand để tránh lỗi undefined) ---
+\newcommand{\khungcauhoi}{%
+	\begin{tikzpicture}[baseline=(innerbox.base)]
+		% 1. Khung nền lớn ngoài cùng bọc cả ảnh và ô câu hỏi
+		\node[
+		draw=none,
+		fill=outerbg,
+		rounded corners=10pt,
+		inner sep=4pt,
+		outer sep=0pt
+		] (outerbox) {
+			\begin{tikzpicture}[every node/.style={inner sep=0pt, outer sep=0pt}]
+				% 2. Chèn hình ảnh Conan bên trái
+				% Có thể điều chỉnh chiều cao hình bằng height (ví dụ: height=1.2cm hoặc height=1.5cm)
+				\node (img) {\includegraphics[height=1.2cm]{conan.png}};
+				
+				% 3. Khung chứa chữ "Câu X." bên phải hình ảnh
+				\node[
+				right=6pt of img,
+				draw=myorange,
+				fill=bglightorange,
+				line width=1.5pt,
+				rounded corners=8pt,
+				inner xsep=10pt,
+				inner ysep=4pt,
+				text=myorange,
+				font=\bfseries
+				] (innerbox) {Câu \thecauhoi.};
+			\end{tikzpicture}
+		};
+	\end{tikzpicture}%
+}
+
+% --- 4. MÔI TRƯỜNG CAUHOI & CAUTIEUDE ---
+\newcommand{\cautieude}{%
+	\refstepcounter{cauhoi}%
+	\par\noindent\khungcauhoi\par\nopagebreak\vspace{0.2cm}%
+}
+
+\newenvironment{cauhoi}[1][2]{%
+	\refstepcounter{cauhoi}%
+	\par\noindent\khungcauhoi\par\nopagebreak\vspace{0.2cm}%
+	\ignorespaces
+}{%
+}
+
+\newcommand{\noidung}[1]{\noindent#1\par}
+
+% --- 5. LỆNH VẼ HÌNH TRÒN PHƯƠNG ÁN ---
+\newcommand{\circlelabel}[1]{%
+	\begin{tikzpicture}[baseline=(char.base)]
+		\node[
+		circle,
+		draw=myorange,
+		text=myorange,
+		thick,
+		inner sep=1.5pt,
+		minimum size=1.3em,
+		font=\bfseries
+		] (char) {#1};
+	\end{tikzpicture}%
+}
+
+% --- 6. MÔI TRƯỜNG PHUONGAN ---
+\newenvironment{phuongan}[1][2]{%
+	\begin{tasks}[
+		label=\Alph*,
+		label-format=\circlelabel,
+		item-indent=1cm,        % Lùi lề trái 1cm cho toàn bộ phương án
+		label-width=1.8em,      % Độ rộng khung nhãn
+		label-offset=0.4em,     % Khoảng cách từ nhãn đến chữ
+		after-item-skip=0.35cm   % <-- THÊM DÒNG NÀY ĐỂ GIÃN DÒNG CÁC ĐÁP ÁN
+		](#1)
+	}{%
+	\end{tasks}%
+	\vspace{0.3cm}%
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%code câu hỏi và phương án trắc nghiệm
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%code trắc nghiệm 4 hàng có 4 hình
+\newcommand{\phuonganhinh}[9][0.22]{%
+	\par\vspace{0.2cm}\noindent
+	\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}} c c c c @{}}
+		\includegraphics[width=#1\textwidth]{#2} &
+		\includegraphics[width=#1\textwidth]{#3} &
+		\includegraphics[width=#1\textwidth]{#4} &
+		\includegraphics[width=#1\textwidth]{#5} %
+		% Kiểm tra nếu có ít nhất 1 nhãn được điền thì mới xuống dòng hiện nhãn
+		\ifthenelse{\equal{#6}{}\and\equal{#7}{}\and\equal{#8}{}\and\equal{#9}{}}{}{%
+			\\[4pt]
+			#6 & #7 & #8 & #9
+		}%
+	\end{tabular*}%
+	\par\vspace{0.2cm}%
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%code trắc nghiệm 4 hàng có 4 hình
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\chenhinhdoi}[4]{%
+	\begin{figure}[H]
+		\centering
+		\begin{minipage}[c]{0.48\linewidth}
+			\centering
+			\chenhinh{#1}{#2}
+		\end{minipage}%
+		\hfill % Tự động đẩy 2 hình sang 2 bên để khoảng cách cân đối
+		\begin{minipage}[c]{0.48\linewidth}
+			\centering
+			\chenhinh{#3}{#4}
+		\end{minipage}
+	\end{figure}%
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%code Bảng đúng sai
+% --- BẢNG ĐÚNG SAI CHUẨN TỈ LỆ & SẠCH LỖI 100% ---
+
+\newcommand{\headertableDS}{%
+	\par\vspace{0.2cm}\noindent
+	\begin{tikzpicture}[every node/.style={inner sep=0pt, outer sep=0pt}]
+		% Tiêu đề Phát biểu
+		\node[
+		fill=myorange, text=white, font=\bfseries,
+		rounded corners=5pt, minimum height=0.75cm,
+		text width=\dimexpr\textwidth-2.8cm\relax, align=center
+		] (h_pb) {Phát biểu};
+		
+		% Tiêu đề Đúng
+		\node[
+		fill=myorange, text=white, font=\bfseries,
+		rounded corners=5pt, minimum height=0.75cm,
+		text width=1.2cm, align=center,
+		xshift=4pt, right=0pt of h_pb
+		] (h_d) {Đúng};
+		
+		% Tiêu đề Sai
+		\node[
+		fill=myorange, text=white, font=\bfseries,
+		rounded corners=5pt, minimum height=0.75cm,
+		text width=1.2cm, align=center,
+		xshift=4pt, right=0pt of h_d
+		] (h_s) {Sai};
+	\end{tikzpicture}%
+	\par\vspace{0.08cm}
+}
+
+\newcommand{\phatbieuDS}[3]{% Thay đổi thành 3 đối số (thêm đối số #3)
+	\noindent
+	\begin{tikzpicture}[every node/.style={inner sep=0pt, outer sep=0pt}]
+		% 1. Ô Phát biểu (Khung nội dung chính)
+		\node[
+		fill=bgcard, draw=bordercard, line width=0.5pt,
+		rounded corners=5pt, minimum height=0.85cm,
+		text width=\dimexpr\textwidth-2.8cm-12pt\relax, align=left,
+		inner xsep=6pt, inner ysep=6pt
+		] (b_pb) {{\color{myorange}\bfseries #1)} #2};
+		
+		% 2. Ô Đúng
+		\node[
+		fill=bgcard, draw=bordercard, line width=0.5pt,
+		rounded corners=5pt,
+		fit={(b_pb.north) (b_pb.south)}, 
+		text width=1.2cm,
+		anchor=north west
+		] (b_d) at ([xshift=4pt]b_pb.north east) {};
+		
+		% 3. Ô Sai (Thêm tên node là b_s để dễ dàng chèn tick vào giữa)
+		\node[
+		fill=bgcard, draw=bordercard, line width=0.5pt,
+		rounded corners=5pt,
+		fit={(b_pb.north) (b_pb.south)}, 
+		text width=1.2cm,
+		anchor=north west
+		] (b_s) at ([xshift=4pt]b_d.north east) {};
+		
+		% 4. Xử lý đánh dấu tick (Màu đỏ, size to)
+		% Nếu đối số #3 là Đ -> Đánh dấu vào giữa ô b_d
+		\ifthenelse{\equal{#3}{Đ}}{
+			\node at (b_d.center) {\color{red}\LARGE $\checkmark$};
+		}{}
+		
+		% Nếu đối số #3 là S -> Đánh dấu vào giữa ô b_s
+		\ifthenelse{\equal{#3}{S}}{
+			\node at (b_s.center) {\color{red}\LARGE $\checkmark$};
+		}{}
+	\end{tikzpicture}%
+	\par\vspace{0.08cm}
+}
+
+\newenvironment{bangdungsai}{%
+	\headertableDS
+}{%
+	\par\vspace{0.15cm}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%code bảng đúng sai
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%code tạo bảng trả lời ngắn
+% 1. ĐỊNH NGHĨA LẠI \khungtlngan
+% Lệnh này giờ sẽ nhận 5 đối số: #1 (ảnh, mặc định là agasa.png), #2, #3, #4, #5 là nội dung 4 ô
+\newcommand{\khungtlngan}[5][agasa.png]{%
+	\par\vspace{0.15cm}%
+	\hfill% Đẩy toàn bộ khung TikZ sang sát lề bên phải
+	\begin{tikzpicture}[
+		scale=0.65,
+		every node/.style={transform shape, inner sep=0pt, outer sep=0pt},
+		% Định nghĩa sẵn style cho 4 ô vuông để code gọn hơn, màu chữ mặc định là đỏ (text=red)
+		box ans/.style={fill=white, draw=myorange, line width=1pt, rounded corners=4pt, minimum size=0.95cm, anchor=west, font=\Large\bfseries, text=red}
+		]
+		% Hàng tiêu đề "KẾT QUẢ:"
+		\node[
+		fill=myorange, text=white, font=\bfseries\sffamily,
+		rounded corners=6pt, minimum height=0.7cm,
+		text width=6.8cm, align=center
+		] (head_kq) {\large KẾT QUẢ:};
+		
+		% Khung nền dưới
+		\node[
+		fill=bglightorange, draw=myorange!40, line width=0.6pt,
+		rounded corners=8pt, minimum height=1.3cm,
+		text width=6.8cm, anchor=north,
+		yshift=-3pt
+		] (bg_box) at (head_kq.south) {};
+		
+		% Vị trí ô vuông đầu tiên
+		\coordinate (box1_left) at ([xshift=1.9cm]bg_box.west);
+		
+		% Căn giữa Icon vào khoảng trống bên trái
+		\node at ($ (bg_box.west)!0.5!(box1_left) $) {%
+			\includegraphics[height=1.1cm]{#1}%
+		};
+		
+		% 4 ô vuông đáp án (Truyền lần lượt #2, #3, #4, #5 vào)
+		\node[box ans] at ([xshift=0*1.15cm]box1_left) {#2};
+		\node[box ans] at ([xshift=1*1.15cm]box1_left) {#3};
+		\node[box ans] at ([xshift=2*1.15cm]box1_left) {#4};
+		\node[box ans] at ([xshift=3*1.15cm]box1_left) {#5};
+	\end{tikzpicture}%
+	\par\vspace{0.1cm}%
+}
+
+% 2. ĐỊNH NGHĨA LẠI MÔI TRƯỜNG CAUTLNGAN
+% Môi trường nhận 4 tham số truyền vào từ file chính
+\newenvironment{cautlngan}[4]{%
+	% Lưu 4 tham số vào các lệnh tạm để dùng ở block \end{}
+\def\ansA{#1}%
+\def\ansB{#2}%
+\def\ansC{#3}%
+\def\ansD{#4}%
+\refstepcounter{cauhoi}%
+\par\noindent\khungcauhoi\par\nopagebreak\vspace{0.2cm}%
+\ignorespaces
+}{%
+% In khung kết quả cùng với 4 đáp án đã lưu
+\par\khungtlngan{\ansA}{\ansB}{\ansC}{\ansD}
+}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%code tạo bảng trả lời ngắn
+
+
+
+
+
+
+
+
+
+% Lệnh chèn hình
+% #1: Tên file ảnh (để trong thư mục ảnh hoặc cùng thư mục)
+% #2: Độ rộng ảnh tính theo tỉ lệ của chiều ngang trang (ví dụ: 0.5 là 50%)
+\newcommand{\chenhinh}[2]{%
+	\par\vspace{0.3cm}
+	\begin{center}
+		\includegraphics[width=#2\textwidth]{#1}
+	\end{center}
+	\par\vspace{0.3cm}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% LỆNH TẠO BÀI
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Cấu hình nét vẽ mặc định cho TikZ
+\tikzset{every picture/.style={line width=0.75pt}}
+
+% Tạo box tạm để đo kích thước chữ
+\newsavebox{\baibox}
+
+\newcommand{\Bai}[1]{%
+	\clearpage
+	\refstepcounter{bai}%
+	\addcontentsline{toc}{chapter}{Bài \thebai: #1}%
+	\setcounter{section}{0}%
+	\setcounter{subsection}{0}%
+	\setcounter{subsubsection}{0}%
+	%
+	% 1. Đo chiều cao thực tế của chữ, giới hạn theo độ dài khung mới 15.4cm
+	\sbox{\baibox}{%
+		\begin{varwidth}{15.4cm - 70pt}%
+			\centering\bfseries\Large\color{blue!90!black} #1%
+		\end{varwidth}%
+	}%
+	% 2. Lấy nửa chiều cao để tính toán mở rộng khung
+	\pgfmathsetmacro{\textH}{\ht\baibox + \dp\baibox}%
+	\pgfmathsetmacro{\halfH}{max(27.89, \textH/2 + 18)}%
+	\pgfmathsetmacro{\yTop}{240.29 - \halfH}%
+	\pgfmathsetmacro{\yBot}{240.29 + \halfH}%
+	% Tính độ trượt ngang (x shift) theo góc nghiêng để giữ đúng dáng hình bình hành
+	\pgfmathsetmacro{\xShiftTop}{(\yTop - 212.4) * 0.48}%
+	\pgfmathsetmacro{\xShiftBot}{(\yBot - 268.18) * 0.48}%
+	%
+	\noindent
+	\begin{center}
+		\begin{tikzpicture}[x=0.75pt, y=0.75pt, yscale=-1]
+			
+			% ==================== HÌNH VẼ KHUNG ====================
+			% 1. Shape: Parallelogram Lớn (Đã mở rộng cạnh phải ra 15.4cm)
+			\draw [color={rgb, 255:red, 0; green, 37; blue, 255}, draw opacity=1, line width=2.25]  
+			(63.26 + \xShiftTop, \yTop) -- (15.6cm, \yTop) -- (15.6cm - 20.44pt - \xShiftBot, \yBot) -- (36 - \xShiftBot, \yBot) -- cycle;
+			
+			% 2. Shape: Parallelogram Nhỏ (Dải Vàng)
+			\draw [color={rgb, 255:red, 255; green, 242; blue, 7}, draw opacity=1, fill={rgb, 255:red, 255; green, 242; blue, 7}, fill opacity=1] 
+			(52.32 + \xShiftTop, \yTop) -- (59.26 + \xShiftTop, \yTop) -- (30.94 - \xShiftBot, \yBot) -- (24 - \xShiftBot, \yBot) -- cycle;
+			
+			% 3. Shape: Parallelogram Nhỏ (Dải Xanh)
+			\draw [color={rgb, 255:red, 0; green, 37; blue, 255}, draw opacity=1, fill={rgb, 255:red, 0; green, 37; blue, 255}, fill opacity=1] 
+			(40.32 + \xShiftTop, \yTop) -- (47.26 + \xShiftTop, \yTop) -- (18.94 - \xShiftBot, \yBot) -- (12 - \xShiftBot, \yBot) -- cycle;
+			
+			% 4. Shape: Parallelogram Nhỏ (Dải Đỏ)
+			\draw [color={rgb, 255:red, 250; green, 0; blue, 0}, draw opacity=1, fill={rgb, 255:red, 250; green, 0; blue, 0}, fill opacity=1] 
+			(28.32 + \xShiftTop, \yTop) -- (35.26 + \xShiftTop, \yTop) -- (6.94 - \xShiftBot, \yBot) -- (0 - \xShiftBot, \yBot) -- cycle;
+			
+			% 5. Khung bo tròn (Capsule) BÀI (Neo cố định theo mép trên \yTop)
+			\draw [color={rgb, 255:red, 0; green, 37; blue, 255}, draw opacity=1, fill={rgb, 255:red, 242; green, 250; blue, 247}, fill opacity=1, line width=2.25]   
+			(40, \yTop - 51.53) -- (108, \yTop - 51.53);
+			\draw [color={rgb, 255:red, 0; green, 37; blue, 255}, draw opacity=1, line width=2.25]   
+			(40, \yTop - 11.53) -- (110, \yTop - 11.6);
+			\draw [draw opacity=0, line width=2.25]  
+			(40, \yTop - 11.53) .. controls (39.99, \yTop - 11.53) and (39.98, \yTop - 11.53) .. (39.97, \yTop - 11.53) .. controls (29.33, \yTop - 11.53) and (20.71, \yTop - 20.49) .. (20.71, \yTop - 31.53) .. controls (20.71, \yTop - 42.58) and (29.33, \yTop - 51.54) .. (39.97, \yTop - 51.54) .. controls (40.3, \yTop - 51.54) and (40.62, \yTop - 51.53) .. (40.95, \yTop - 51.51) -- (39.97, \yTop - 31.53) -- cycle; 
+			\draw [color={rgb, 255:red, 0; green, 37; blue, 255}, draw opacity=1, line width=2.25]  
+			(40, \yTop - 11.53) .. controls (39.99, \yTop - 11.53) and (39.98, \yTop - 11.53) .. (39.97, \yTop - 11.53) .. controls (29.33, \yTop - 11.53) and (20.71, \yTop - 20.49) .. (20.71, \yTop - 31.53) .. controls (20.71, \yTop - 42.58) and (29.33, \yTop - 51.54) .. (39.97, \yTop - 51.54) .. controls (40.3, \yTop - 51.54) and (40.62, \yTop - 51.53) .. (40.95, \yTop - 51.51); 
+			
+			% 6. Shape: Circle (Vòng tròn đỏ SỐ BÀI)
+			\draw [color={rgb, 255:red, 250; green, 0; blue, 0}, fill=white, draw opacity=1, line width=2.25]  
+			(98.56, \yTop - 32.27) .. controls (98.56, \yTop - 45.58) and (109.35, \yTop - 56.37) .. (122.66, \yTop - 56.37) .. controls (135.97, \yTop - 56.37) and (146.76, \yTop - 45.58) .. (146.76, \yTop - 32.27) .. controls (146.76, \yTop - 18.96) and (135.97, \yTop - 8.17) .. (122.66, \yTop - 8.17) .. controls (109.35, \yTop - 8.17) and (98.56, \yTop - 18.96) .. (98.56, \yTop - 32.27) -- cycle;
+			
+			% ==================== VĂN BẢN ====================
+			% 1. Chữ "BÀI"
+			\node at (65, \yTop - 34.4) {\bfseries\Large\color{blue!90!black} BÀI};
+			% 2. SỐ BÀI
+			\node at (122.66, \yTop - 32.27) {\bfseries\Large\color{red!90!black} \thebai};
+			% 3. TÊN BÀI (Tự động căn giữa theo mốc 15.4cm)
+			\node at (0.5*15.4cm + 3.5pt, 240.29) {\usebox{\baibox}};
+			
+		\end{tikzpicture}
+	\end{center}
+	\vspace{0.5cm}
+}
+
+% Khai báo bộ đếm một lần duy nhất ở ngoài để không bị trùng lặp
+\newcounter{tongdong}
+\newcounter{sodong}
+
+% Định nghĩa lệnh \vekhungcham{số dòng}{khoảng cách}
+\newcommand{\vekhungcham}[2]{%
+	\vspace{-0.5cm}
+	\par\begingroup
+	\setlength{\baselineskip}{#2}%
+	\setlength{\lineskiplimit}{-\maxdimen}%
+	\setlength{\parskip}{0pt}%
+	
+	\setcounter{tongdong}{#1}%
+	\setcounter{sodong}{0}%
+	
+	\foreach \i in {1,...,#1} {%
+		\stepcounter{sodong}%
+		\noindent
+		\makebox[0.48\textwidth]{\dotfill}%
+		\hfill
+		\begin{tikzpicture}[baseline=0pt, inner sep=0pt, outer sep=0pt]
+			\ifnum\value{sodong}=\value{tongdong}%
+			% === DÒNG CUỐI CÙNG ===
+			% Chỉnh con số -0.2cm này để co/giãn đuôi đường thẳng theo ý muốn
+			\draw (0, 0.25cm) -- (0, -0.2cm);
+			\else%
+			% === CÁC DÒNG BÌNH THƯỜNG TRÊN ===
+			\draw (0, 0.25cm) -- (0, -#2);
+			\fi%
+		\end{tikzpicture}%
+		\hfill
+		\makebox[0.48\textwidth]{\dotfill}\par
+	}%
+	\endgroup
+	\par\vspace{0.3cm}%
+}
+
+% Định nghĩa lệnh \khung{nội dung} màu xanh blue
+\newcommand{\khung}[1]{%
+	\begin{tcolorbox}[
+		breakable,                   % Tự động ngắt sang trang khi hết hàng/hết trang
+		colback=blue!5!white,        % Màu nền xanh nhạt
+		colframe=blue!75!black,      % Màu viền xanh blue đậm
+		arc=3mm,                     % Độ bo góc
+		boxrule=1pt,                 % Độ dày đường viền
+		left=8pt, right=8pt, top=8pt, bottom=8pt % Khoảng cách đệm bên trong
+		]
+		#1
+	\end{tcolorbox}%
+}
+
+% --- CẤU HÌNH MỤC LỤC LỚN ---
+\setcounter{tocdepth}{3} % Cho phép mục lục lớn hiện đến cấp 1.1.1 (subsubsection)
+
+% Ép lệnh \Bai tự động ghi danh mục vào file mục lục tổng (.toc)
+\let\oldBai\Bai
+\renewcommand{\Bai}[1]{%
+	\oldBai{#1}%
+	\addcontentsline{toc}{chapter}{Bài \thebai: #1}% Đưa tên Bài vào mục lục tổng
+}
+
+% Định dạng cách hiển thị của các Section và Subsection trong mục lục lớn bằng titletoc
+% Cấu hình độ sâu mục lục (Hiển thị đến cấp subsubsection 1.1.1.1 nếu có)
+% --- ĐỊNH DẠNG MỤC LỤC LỚN VÀ NHỎ CHUẨN PHÂN CẤP ---
+% Cấu hình độ sâu hiển thị đến cấp subsubsection (1.1.1)
+\setcounter{tocdepth}{3}
+
+% Định nghĩa lại lệnh \NoiDung (Mục lục nhỏ cho từng bài)
+\newcommand{\NoiDung}{%
+	\noindent{\large\textbf{Nội dung}}
+	\vspace{0.2cm}
+	\hrule height0.8pt
+	\vspace{0.3cm}
+	
+	% Sử dụng định dạng mặc định gọn gàng cho mục lục nhỏ
+	\printcontents{l}{1}{\setcounter{tocdepth}{3}}
+	
+	\vspace{0.2cm}
+	\hrule height0.8pt
+	\vspace{1cm}
+}
+% Nếu muốn đổi tên chữ "Mục lục" mặc định thành chữ khác (ví dụ: "MỤC LỤC TỔNG HỢP")
+\addto\captionsvietnamese{%
+	\renewcommand{\contentsname}{MỤC LỤC}%
+}
+%===============Package Đề thi TNTHPT=============
+\newcommand{\KhungDeThi}[2]{% #1: Thời gian, #2: Mã đề
+	\par\noindent\vspace{0.2cm}
+	\begin{tcolorbox}[
+		enhanced,
+		colback=bgcard,           % Màu nền xanh pastel nhạt
+		colframe=blueNavy,        % Viền màu xanh đậm
+		arc=8pt,                  % Bo góc tròn
+		boxrule=1.2pt,            % Độ dày viền
+		left=4pt, right=8pt,      
+		top=6pt, bottom=6pt,      
+		sidebyside,               
+		sidebyside align=center,  
+		sidebyside gap=10pt,      
+		lefthand width=3.0cm,     % Giữ nguyên độ rộng ô điểm số
+		segmentation style={solid, blueNavy, line width=1.2pt} 
+		]
+		
+		% ----------------- Ô TRÁI: ĐIỂM SỐ -----------------
+		\begin{center}
+			\tikz \node[fill=blueNavy, text=white, font=\bfseries\small,
+			rounded corners=4pt, inner xsep=8pt, inner ysep=4pt] {ĐIỂM SỐ};
+			\par\vspace{0.2cm}
+			\tikz \node[draw=blueNavy, dashed, line width=1pt, rounded corners=5pt,
+			minimum width=2.4cm, minimum height=1.6cm] {};
+		\end{center}
+		
+		\tcblower
+		% ----------------- Ô PHẢI: THÔNG TIN ĐỀ THI -----------------
+		\renewcommand{\arraystretch}{1.6} % TĂNG độ giãn dòng (từ 1.35 lên 1.6)
+		\normalsize 
+		
+		% THU HẸP khoảng trống cột chứa dấu chấm (từ 0.8cm xuống 0.3cm) để sát chữ hơn
+		\begin{tabularx}{\linewidth}{>{\centering\arraybackslash}m{0.3cm} l X @{}}
+			\tikz[baseline=-0.5ex]\draw[myorange, fill=myorange] (0,0) circle (2pt); & \textbf{\textcolor{blueNavy}{Họ và tên học sinh:}} & \dotfill \\
+			\tikz[baseline=-0.5ex]\draw[myorange, fill=myorange] (0,0) circle (2pt); & \textbf{\textcolor{blueNavy}{Lớp:}} & \dotfill \\
+			\tikz[baseline=-0.5ex]\draw[myorange, fill=myorange] (0,0) circle (2pt); & \textbf{\textcolor{blueNavy}{Thời gian làm bài:}} & \textbf{#1} \\
+			\tikz[baseline=-0.5ex]\draw[myorange, fill=myorange] (0,0) circle (2pt); & \textbf{\textcolor{blueNavy}{Mã đề:}} & \textbf{\textcolor{myred}{#2}} \\
+		\end{tabularx}
+	\end{tcolorbox}
+	\par\vspace{0.4cm}
+}
+%===============Package Đề thi TNTHPT 1=============
+\endinput

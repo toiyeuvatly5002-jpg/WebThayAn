@@ -1,0 +1,13 @@
+[build]
+  command = "node tools/verify.cjs && node tools/verify-tikz.cjs"
+  publish = "public"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["firebase-admin","node-tikzjax"]
+
+

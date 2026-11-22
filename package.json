@@ -1,0 +1,17 @@
+{
+  "name": "phong-hoc-thay-an",
+  "version": "5.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.cjs",
+    "build": "node tools/verify.cjs",
+    "test": "node tools/verify.cjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "node-tikzjax": "1.0.5"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
