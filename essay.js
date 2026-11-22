@@ -37,7 +37,7 @@ async function gradingQueue() {
 async function gradePaper(attempt) {
  try {
   const r=await api("gradingPaper",{attempt});
-  panel.innerHTML='<h2>'+h(r.title)+'</h2><p>'+h(r.name)+' · '+h(r.code)+' · Điểm tự động: '+r.auto.toFixed(2)+'/10</p>'+pdfButton(r.paperPdf,"Mở đề PDF")+'<form id="markPaper">'+r.essay.map(i=>'<fieldset class="box"><legend>Câu '+(i+1)+'</legend>'+pairedPrompt(r.prompts[i],defaultStyle)+r.photos[i].map(src=>'<img alt="Bài làm câu '+(i+1)+'" style="display:block;max-width:100%" src="'+h(src)+'">').join("")+field('Mức đạt (%) · tối đa '+r.max.toFixed(2)+' điểm','<input type="number" min="0" max="100" step="any" required>')+'</fieldset>').join("")+'<button class="primary">Duyệt và trả điểm</button></form>';
+  panel.innerHTML='<h2>'+h(r.title)+'</h2><p>'+h(r.name)+' · '+h(r.code)+' · Điểm tự động: '+r.auto.toFixed(2)+'/10</p>'+pdfButton(r.paperPdf,"Mở đề PDF")+'<form id="markPaper">'+r.essay.map(i=>'<fieldset class="box"><legend>Câu '+(i+1)+'</legend>'+pairedPrompt(r.prompts[i],r.art)+r.photos[i].map(src=>'<img alt="Bài làm câu '+(i+1)+'" style="display:block;max-width:100%" src="'+h(src)+'">').join("")+field('Mức đạt (%) · tối đa '+r.max.toFixed(2)+' điểm','<input type="number" min="0" max="100" step="any" required>')+'</fieldset>').join("")+'<button class="primary">Duyệt và trả điểm</button></form>';
   panel.querySelector("form").onsubmit=async e=>{
    e.preventDefault();
    const fractions=Array.from(e.target.querySelectorAll("input"),input=>input.valueAsNumber);

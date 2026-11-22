@@ -6,23 +6,25 @@ const crypto=require("node:crypto");
 const {execFile}=require("node:child_process");
 const {promisify}=require("node:util");
 const execute=promisify(execFile);
-const assets=path.join(__dirname,"..","public","assets");
 
 async function compilePair(paper,worked,template) {
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"phonghoc-tex-"));
  try {
   fs.mkdirSync(path.join(dir,"HinhAnh"));
   for(const image of ["conan","agasa"]){
-   if(template?.[image]?.removed)continue;
    const value=template?.[image];
-   const bytes=typeof value==="string"?Buffer.from(value.split(",")[1],"base64"):fs.readFileSync(path.join(assets,image+".png"));
-   fs.writeFileSync(path.join(dir,"HinhAnh",image+".png"),bytes);
-   fs.writeFileSync(path.join(dir,image+".png"),bytes);
+   if(typeof value!=="string")continue;
+   const filename=template.imageNames?.[image]||image+".png";
+   if(!/^[\p{L}\p{N}_ .-]+\.png$/iu.test(filename))throw Error("Tên ảnh PNG không hợp lệ.");
+   const bytes=Buffer.from(value.split(",")[1],"base64");
+   fs.writeFileSync(path.join(dir,"HinhAnh",filename),bytes);
+   fs.writeFileSync(path.join(dir,filename),bytes);
   }
   const style=template?.style;
-  const name=style?.name||"PackageForDayThemVatLy12.sty";
-  if(!/^[\w.-]+\.sty$/i.test(name))throw Error("Tên mẫu .sty không hợp lệ.");
-  if(!style?.removed)fs.writeFileSync(path.join(dir,name),style?.source??fs.readFileSync(path.join(assets,name)));
+  if(style?.source && !style.removed){
+   if(!/^[\p{L}\p{N}_ .-]+\.sty$/iu.test(style.name))throw Error("Tên mẫu .sty không hợp lệ.");
+   fs.writeFileSync(path.join(dir,style.name),style.source);
+  }
   const pdfs=[];
   for(const [idx,tex] of [paper,worked].entries()){
    const stem=idx?"loigiai":"de";

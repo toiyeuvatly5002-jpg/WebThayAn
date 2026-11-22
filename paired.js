@@ -42,20 +42,10 @@ function tikzLibrariesFrom(...sources) {
  }
  return [...names].join(",");
 }
-async function paperLibraries(source) {
- const {template} = await api("templateAdmin");
- let style = template.style?.source || "";
- if (!template.style?.removed && !style) {
-  const response = await fetch("assets/"+encodeURIComponent(defaultStyle.name));
-  if (!response.ok) throw Error("Không tải được tệp .sty dùng chung.");
-  style = await response.text();
- }
- return tikzLibrariesFrom(source,style);
-}
-async function pairedPaper(source,answerText){
- const keys=sheetKeys(answerText),blocks=splitPaper(markTemplateImages(source));
+async function pairedPaper(source,answerText,template={}){
+ const keys=sheetKeys(answerText),blocks=splitPaper(markTemplateImages(source,template.imageNames));
  if(keys.length!==blocks.length)throw Error("Đề có "+blocks.length+" câu, bảng có "+keys.length+" đáp án.");
- const libraries = source.includes("\\begin{tikzpicture}") ? await paperLibraries(source) : "";
+ const libraries=tikzLibrariesFrom(source,template.style?.source||"");
  const prompts=[];let context="",remaining=0;
  for(const [i,{src:raw,type,gap}] of blocks.entries()){
  const common=gap.match(/\\noindent\s*\\textbf\{Sử dụng[^}\n]*?câu\s+(\d+)\s+và\s+câu\s+(\d+)[^}]*\}([^\n]+)/i);
@@ -96,7 +86,7 @@ function pairedEditor(onRead){
  function reset(){version++;onRead(null);pairPreview.textContent="";}
  compilerControls(onRead,reset);
  pairPaper.oninput=pairKeys.oninput=reset;document.querySelector("#solutionSource").addEventListener("input",()=>{if(pairPaper.isConnected)reset()});
- pairCheck.onclick=async()=>{reset();pairPreview.textContent="Đang đọc đề và ghép lời giải…";const id=version;try{const keys=pairKeys.value.trim() || keysFromSolutions(pairPaper.value,document.querySelector("#solutionSource").value);const data=await pairedPaper(pairPaper.value,keys);if(id!==version)return;onRead(data);pairPreview.innerHTML=data.keys.map((k,i)=>'<details class="keyChip"><summary>Câu '+(i+1)+' · '+h(k)+'</summary>'+pairedPrompt(data.prompts[i],defaultStyle)+'</details>').join("")}catch(e){if(id===version)pairPreview.textContent=e.message}};
+ pairCheck.onclick=async()=>{reset();pairPreview.textContent="Đang đọc đề và ghép lời giải…";const id=version;try{const keys=pairKeys.value.trim() || keysFromSolutions(pairPaper.value,document.querySelector("#solutionSource").value);const {template,art}=await api("templateAdmin");const data=await pairedPaper(pairPaper.value,keys,template);if(id!==version)return;onRead(data);pairPreview.innerHTML=data.keys.map((k,i)=>'<details class="keyChip"><summary>Câu '+(i+1)+' · '+h(k)+'</summary>'+pairedPrompt(data.prompts[i],art)+'</details>').join("")}catch(e){if(id===version)pairPreview.textContent=e.message}};
 }
 
 

@@ -1,6 +1,4 @@
 // The web equivalents of the two illustrated frames in the teacher's package.
-const templateImages={conan:"assets/conan.png",agasa:"assets/agasa.png"};
-const defaultStyle={name:"PackageForDayThemVatLy12.sty",conan:true,agasa:true};
 function readFrameStyle(source,name){
  const sty=source.replace(/(?<!\\)%[^\n]*/g,"");
  const question=sty.split(/\\(?:re)?newcommand\s*\{\\khungcauhoi\}/)[1]?.split(/\\(?:re)?new(?:command|environment)\b/)[0]||"";
@@ -9,12 +7,16 @@ function readFrameStyle(source,name){
  if(!sty.trim())throw Error("Tệp .sty trống.");
  return {name,conan,agasa};
 }
-function markTemplateImages(source){
- return source.replace(/\\includegraphics\*?(?:\s*\[[^\]]*\])?\s*\{\s*(?:[^{}\n]*\/)?(conan|agasa)(?:\.png)?\s*\}/gi,(_,name)=>"[["+name.toLowerCase()+"]]");
+function markTemplateImages(source,names={}){
+ return source.replace(/\\includegraphics\*?(?:\s*\[[^\]]*\])?\s*\{\s*(?:[^{}\n]*\/)?([^{}\/\n]+?)\s*\}/gi,(whole,name)=>{
+  const stem=name.replace(/\.png$/i,"").toLowerCase();
+  const key=["conan","agasa"].find(k=>(names?.[k]||k).replace(/\.png$/i,"").toLowerCase()===stem);
+  return key?"[["+key+"]]":whole;
+ });
 }
 function illustrated(frame,art,explicit=false){
  if(!art||art[frame+"Hidden"]||(!explicit&&!art[frame]))return "";
- const src=art[frame+"Image"]||templateImages[frame];
+ const src=art[frame+"Image"];if(!src)return "";
  return '<img class="frame-icon" src="'+h(src)+'" alt="'+(frame==="conan"?"Conan":"Agasa")+'">';
 }
 function inlineArt(text,art){return text.replace(/\[\[(conan|agasa)\]\]/g,(_,name)=>illustrated(name,art,true))}

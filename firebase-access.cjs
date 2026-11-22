@@ -20,7 +20,7 @@ async function scoped(ref,action,b,token,address){
  const db={users:{[code]:user},sessions:{[digest]:session},items:[],results:{}};
  if(action==="catalog")db.items=Object.values(await value(ref.child("items"))||{});
  if(action==="accounts")db.users=await value(ref.child("users"))||{};
- if(action==="templateAdmin"||action==="open")db.template=await value(ref.child("template"))||{};
+ if(["templateAdmin","open","review","gradingPaper"].includes(action))db.template=await value(ref.child("template"))||{};
  if(action==="history"||action==="report"){
  const owner=action==="history"?code:b.code;
  if(owner&&!/^\d{5}$/.test(owner))deny(400,"Mã học sinh không hợp lệ.");

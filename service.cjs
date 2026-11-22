@@ -12,7 +12,7 @@ function seed(admin,student){
 }
 function sharedArt(template={},legacy={}){
  const style=template.style||legacy;
- const visible=k=>!style.removed&&!template[k]?.removed&&(style[k]??true);
+ const visible=k=>!style.removed&&!template[k]?.removed && (style[k] || (style.source && template.imageNames?.[k] && style.source.includes(template.imageNames[k])) || false);
  const art={conan:visible("conan"),agasa:visible("agasa")};
  for(const k of ["conan","agasa"]){
  if(template[k]?.removed)art[k+"Hidden"]=true;
@@ -36,7 +36,7 @@ function run(db,action,b,token,address){
  const code=session.code,user=db.users[code];if(adminActions.includes(action)&&user.role!=="admin")fail(403,"Chỉ quản trị viên được truy cập.");
  if(action==="logout"){delete db.sessions[hash(token)];return {}}
  if(action==="catalog")return {user:{...user,code},items:db.items.map(cleanItem)};
- if(action==="templateAdmin")return {template:db.template||{}};
+ if(action==="templateAdmin")return {template:db.template||{},art:sharedArt(db.template)};
  if(action==="setTemplate"){
  const {slot,value}=b;
  if(!["style","conan","agasa"].includes(slot))fail(400,"Mục mẫu không hợp lệ.");
@@ -47,7 +47,9 @@ function run(db,action,b,token,address){
  template.style={name:value.name,source:value.source,conan:value.conan,agasa:value.agasa};
  }else{
  if(typeof value!=="string"||value.length>100000||!/^data:image\/png;base64,iVBORw0KGgo[A-Za-z0-9+/]*={0,2}$/.test(value))fail(400,"Ảnh PNG không hợp lệ.");
- template[slot]=value;
+ const name=b.filename||slot+".png";
+ if(!/^[\p{L}\p{N}_ .-]+\.png$/iu.test(name)||name.length>180)fail(400,"Tên ảnh PNG không hợp lệ.");
+ template.imageNames??={};template.imageNames[slot]=name;template[slot]=value;
  }
  db.template=template;for(const item of db.items)delete item.art;return {saved:true};
  }
@@ -94,7 +96,7 @@ function run(db,action,b,token,address){
   if(!paper)fail(404,"Không tìm thấy đề.");
   const essay=paper.fields.flatMap((type,i)=>type==="essay"?[i]:[]);
   const max=10/paper.fields.reduce((sum,t)=>sum+(t==="tf"?1:.25),0)*.25;
-  if(action==="gradingPaper")return {title:r.title,name:r.name,code:r.code,photos:r.photos,essay,max,paperPdf:paper.pdfs?.[0],auto:r.points.reduce((a,b)=>a+b,0),prompts:paper.prompts};
+  if(action==="gradingPaper")return {title:r.title,name:r.name,code:r.code,art:sharedArt(db.template,paper.art),photos:r.photos,essay,max,paperPdf:paper.pdfs?.[0],auto:r.points.reduce((a,b)=>a+b,0),prompts:paper.prompts};
   if(!Array.isArray(b.fractions)||b.fractions.length!==essay.length||b.fractions.some(n=>!Number.isFinite(n)||n<0||n>100))fail(400,"Điểm tự luận phải từ 0 đến 100%.");
   essay.forEach((i,j)=>r.points[i]=max*b.fractions[j]/100);
   r.total=+r.points.reduce((a,b)=>a+b,0).toFixed(2);
@@ -111,7 +113,7 @@ function run(db,action,b,token,address){
  if(!r||r.code!==code)fail(404,"Không tìm thấy lượt làm của bạn.");
  if(r.status==="pending")fail(409,"Bài đang chờ giáo viên duyệt điểm.");
  const paper=db.items.find(x=>x.id===r.id);
- return {title:r.title,score:r.total,solutionPdf:paper?.pdfs?.[1],answers:r.answers,keys:r.keys,points:r.points,solutions:paper?.solutions||(paper?.type==="original"?require("./legacy-solutions.json"):[]),prompts:paper?.prompts||paper?.questions?.map(q=>q.text)||[]};
+ return {title:r.title,art:sharedArt(db.template,paper?.art),score:r.total,solutionPdf:paper?.pdfs?.[1],answers:r.answers,keys:r.keys,points:r.points,solutions:paper?.solutions||(paper?.type==="original"?require("./legacy-solutions.json"):[]),prompts:paper?.prompts||paper?.questions?.map(q=>q.text)||[]};
  }
  const item=db.items.find(it=>it.id===b.id);if(!item)fail(404,"Không tìm thấy bài.");
  if(action==="open")return {...cleanItem(item),paperPdf:item.pdfs?.[0],art:sharedArt(db.template,item.art),prompts:item.prompts,questions:item.questions?.map(({key,...q})=>q)};

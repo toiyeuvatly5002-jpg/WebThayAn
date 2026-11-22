@@ -34,25 +34,46 @@ function solutionHTML(tex){
 }
 async function reviewMyAttempt(attempt){
  try{
- const r=await api("review",{attempt});main.innerHTML='<h1>'+h(r.title)+'</h1><p>'+r.score+' / 10 điểm</p>'+pdfButton(r.solutionPdf,"Mở lời giải PDF")+r.keys.map((key,i)=>'<details class="box"><summary>Câu '+(i+1)+' · '+Number(r.points[i].toFixed(2))+' điểm</summary>'+(r.prompts[i]?'<p>'+pairedPrompt(r.prompts[i],defaultStyle)+'</p>':'')+'<p>Đã chọn: '+(key==="TL"?"Đã nộp ảnh":h(r.answers[i]||"Bỏ trống"))+' · Đáp án: '+h(key)+'</p><div>'+(r.solutions[i]?solutionHTML(r.solutions[i]):"Chưa có lời giải cho câu này.")+'</div></details>').join("")+button("Điểm của tôi","historyView()");
+ const r=await api("review",{attempt});main.innerHTML='<h1>'+h(r.title)+'</h1><p>'+r.score+' / 10 điểm</p>'+pdfButton(r.solutionPdf,"Mở lời giải PDF")+r.keys.map((key,i)=>'<details class="box"><summary>Câu '+(i+1)+' · '+Number(r.points[i].toFixed(2))+' điểm</summary>'+(r.prompts[i]?'<p>'+pairedPrompt(r.prompts[i],r.art)+'</p>':'')+'<p>Đã chọn: '+(key==="TL"?"Đã nộp ảnh":h(r.answers[i]||"Bỏ trống"))+' · Đáp án: '+h(key)+'</p><div>'+(r.solutions[i]?solutionHTML(r.solutions[i]):"Chưa có lời giải cho câu này.")+'</div></details>').join("")+button("Điểm của tôi","historyView()");
  }catch(e){notifyError(e)}
 }
 async function templatePanel(){
  try{
  const {template:t}=await api("templateAdmin");
  panel.innerHTML='<h2>Mẫu dùng chung</h2><p>Mẫu áp dụng cho các đề khi học sinh mở bài. Chọn tệp mới để thay thế tệp hiện tại.</p>';
- for(const [slot,label] of [["style","Định dạng LaTeX (.sty)"],["conan","Ảnh đầu câu · Conan"],["agasa","Ảnh đáp số · Agasa"]]){
- const box=document.createElement("fieldset");box.className="box";const current=t[slot],removed=current?.removed;
- box.innerHTML='<legend>'+label+'</legend><p>'+(removed?"Đã xóa":slot==="style"?h(current?.name||defaultStyle.name):'<img class="frame-icon" alt="'+slot+'" src="'+h(current||templateImages[slot])+'">')+'</p><input aria-label="Chọn tệp thay thế" type="file" accept="'+(slot==="style"?".sty":".png")+'"> <button type="button">Xóa</button> <span role="status"></span>';panel.append(box);
- const input=box.querySelector("input"),del=box.querySelector("button"),msg=box.querySelector("span");
- async function save(remove){input.disabled=del.disabled=true;try{
- let value=null;
- if(!remove){const f=input.files[0];if(!f)return;
- if(slot==="style"){if(!/\.sty$/i.test(f.name)||f.size>180000)throw Error("Chọn tệp .sty tối đa 180 KB.");const source=await f.text();value={...readFrameStyle(source,f.name),source}}
- else value=await smallImage(f)}
- await api("setTemplate",{slot,value});await templatePanel();message.textContent=remove?"Đã xóa khỏi mẫu chung.":"Đã thay tệp dùng chung.";
- }catch(e){msg.textContent=e.message}finally{input.disabled=del.disabled=false}}
- input.onchange=()=>save(false);del.disabled=!!removed;del.onclick=()=>{if(confirm("Xóa mục này khỏi mẫu chung?"))save(true)};
+ for(const [slot,label] of [["style","Định dạng LaTeX (.sty)"],["conan","Ảnh đầu câu"],["agasa","Ảnh đáp số"]]){
+ const box=document.createElement("fieldset");
+ box.className="box";
+ box.innerHTML='<legend>'+label+'</legend><p class="current"></p><label>Thay bằng tệp mới <input type="file" accept="'+(slot==="style"?".sty":".png")+'"></label> <button type="button">Xóa</button><p role="status" aria-live="polite"></p>';
+ panel.append(box);
+ const input=box.querySelector("input"),del=box.querySelector("button"),msg=box.querySelector("[role=status]");
+ let current=t[slot];
+ function showCurrent(){
+  const display=box.querySelector(".current");
+  if(!current||current.removed){display.textContent="Chưa có tệp đang dùng.";return}
+  display.textContent= "Đang dùng bản đã tải lên · ";
+  if(slot==="style"){display.append(current.name);return}
+  const img=document.createElement("img");
+  img.className="frame-icon";img.alt=slot;img.src=current;display.append(img);
+ }
+ showCurrent();del.disabled=!!current?.removed;
+ async function save(remove){
+  const file=input.files[0];if(!remove&&!file)return;
+  input.disabled=del.disabled=true;msg.textContent=remove?"Đang xóa…":"Đang lưu "+file.name+"…";
+  try{
+   let value=null;
+   if(!remove && slot==="style"){
+    if(!/\.sty$/i.test(file.name)||file.size>180000)throw Error("Chọn tệp .sty tối đa 180 KB.");
+    const source=await file.text();value={...readFrameStyle(source,file.name),source};
+   }else if(!remove){value=await smallImage(file)}
+   await api("setTemplate",{slot,value,filename:file?.name});
+   current=remove?{removed:true}:value;
+   showCurrent();msg.textContent=remove?"Đã xóa.":"Đã lưu "+file.name+" vào mẫu dùng chung.";
+  }catch(e){msg.textContent="Chưa xác nhận lưu thành công. "+e.message}
+  finally{input.disabled=false;del.disabled=!!current?.removed;if(remove||msg.textContent.startsWith("Chưa"))input.value=""}
+ }
+ input.onchange=()=>save(false);
+ del.onclick=()=>{if(confirm("Xóa mục này khỏi mẫu chung?"))save(true)};
  }
  }catch(e){notifyError(e)}
 }
