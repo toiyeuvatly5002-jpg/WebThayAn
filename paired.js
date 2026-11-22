@@ -65,7 +65,7 @@ function pairedEditor(onRead){
  let version=0;
  function reset(){version++;onRead(null);pairPreview.textContent="";}
  pairPaper.oninput=pairKeys.oninput=reset;document.querySelector("#solutionSource").addEventListener("input",()=>{if(pairPaper.isConnected)reset()});
- pairCheck.onclick=async()=>{reset();const id=version;try{const keys=pairKeys.value.trim() || keysFromSolutions(pairPaper.value,document.querySelector("#solutionSource").value);const data=await pairedPaper(pairPaper.value,keys);if(id!==version)return;onRead(data);pairPreview.innerHTML=data.keys.map((k,i)=>'<details class="keyChip"><summary>Câu '+(i+1)+' · '+h(k)+'</summary>'+pairedPrompt(data.prompts[i],defaultStyle)+'</details>').join("")}catch(e){if(id===version)pairPreview.textContent=e.message}};
+ pairCheck.onclick=async()=>{reset();pairPreview.textContent="Đang đọc đề và ghép lời giải…";const id=version;try{const keys=pairKeys.value.trim() || keysFromSolutions(pairPaper.value,document.querySelector("#solutionSource").value);const data=await pairedPaper(pairPaper.value,keys);if(id!==version)return;onRead(data);pairPreview.innerHTML=data.keys.map((k,i)=>'<details class="keyChip"><summary>Câu '+(i+1)+' · '+h(k)+'</summary>'+pairedPrompt(data.prompts[i],defaultStyle)+'</details>').join("")}catch(e){if(id===version)pairPreview.textContent=e.message}};
 }
 
 

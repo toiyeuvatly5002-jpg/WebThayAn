@@ -10,6 +10,16 @@ function importTools(mode,onRead){
  section.querySelector("#sample").onclick=()=>{source.value=mode==="sheet"?"B\nSĐĐS\n6,6":exampleTex;invalidate()};
  section.querySelector("#texFile").onchange=async e=>{const file=e.target.files[0];if(!file)return;invalidate();if(file.size>1000000){msg.textContent="Chọn tệp văn bản nhỏ hơn 1 MB.";return}try{source.value=await file.text()}catch{msg.textContent="Không đọc được tệp."}};
  section.querySelector("#readTex").onclick=()=>{try{
+ const worked=document.querySelector("#solutionSource")?.value || "";
+ if(mode==="tex" && /\\(?:hdg\s*\\khung|loigiai)\s*\{/.test(worked) && /\\begin\{(?:cauhoi|ex|cautlngan)\}/.test(source.value)){
+   const paper=source.value;
+   const format=document.querySelector("#format");
+   format.value="paired";
+   format.dispatchEvent(new Event("change"));
+   document.querySelector("#pairPaper").value=paper;
+   document.querySelector("#pairCheck").click();
+   return;
+ }
  const data=mode==="sheet"?sheetKeys(source.value):parseQuizTex(markTemplateImages(source.value));
  onRead(data);msg.textContent="Đã đọc "+data.length+" câu. Kiểm tra trước khi đăng.";
  if(mode==="sheet")preview.innerHTML=data.map((v,i)=>'<span class="keyChip">'+(i+1)+'. '+h(v)+'</span>').join("");
