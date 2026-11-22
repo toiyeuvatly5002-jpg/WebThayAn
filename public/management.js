@@ -15,16 +15,16 @@ function parseSolutions(raw,count){
  blocks.push(src.slice(lines[i].index+lines[i][0].length,lines[i+1]?.index??src.length).trim());
  }
  }
- if(blocks.length!==count||blocks.some(b=>!b))throw Error("Đã đọc "+blocks.length+" lời giải cho "+count+" câu. Kiểm tra thứ tự và số lượng trước khi đăng.");
+ if((count>0&&blocks.length!==count)||!blocks.length||blocks.some(b=>!b))throw Error("Đã đọc "+blocks.length+" lời giải cho "+count+" câu. Kiểm tra thứ tự và số lượng trước khi đăng.");
  return blocks;
 }
 function solutionInput(){
  const el=document.createElement("fieldset");el.className="box";el.innerHTML='<legend>Lời giải theo câu (tùy chọn)</legend><label>Chọn tệp .tex <input type="file" accept=".tex,.txt"></label><label class="field">Hoặc dán TeX lời giải<textarea id="solutionSource" rows="6" placeholder="Câu 1: …&#10;Câu 2: …"></textarea></label><button type="button">Xem thử lời giải</button><div role="status"></div>';
  document.querySelector("#content").after(el);
  const input=el.querySelector("input"),source=el.querySelector("textarea"),out=el.querySelector("[role=status]");
- input.onchange=async()=>{try{if(!input.files[0])return;if(input.files[0].size>650000)throw Error("Tệp lời giải vượt 650 KB.");source.value=await input.files[0].text();out.textContent="Đã đọc tệp. Bấm Xem thử để đối chiếu từng câu."}catch(e){out.textContent=e.message}};
+ input.onchange=async()=>{try{if(!input.files[0])return;if(input.files[0].size>650000)throw Error("Tệp lời giải vượt 650 KB.");source.value=await input.files[0].text();source.dispatchEvent(new Event("input"));out.textContent="Đã đọc tệp. Bấm Xem thử để đối chiếu từng câu."}catch(e){out.textContent=e.message}};
  source.oninput=()=>out.textContent="";
- el.querySelector("button").onclick=()=>{try{const count=document.querySelectorAll(".question").length||document.querySelectorAll(".keyChip").length;const list=parseSolutions(source.value,count)||[];out.innerHTML=list.map((v,i)=>'<details><summary>Câu '+(i+1)+'</summary>'+solutionHTML(v)+'</details>').join("")}catch(e){out.textContent=e.message}};
+ el.querySelector("button").onclick=()=>{try{const count=document.querySelectorAll(".question").length||document.querySelectorAll(".keyChip").length;const list=parseSolutions(source.value,count)||[];out.innerHTML=(count===0&&list.length?"<p>Đã đọc "+list.length+" lời giải. Nhập đề hoặc bảng đáp án để đối chiếu số câu trước khi đăng.</p>":"")+list.map((v,i)=>'<details><summary>Câu '+(i+1)+'</summary>'+solutionHTML(v)+'</details>').join("")}catch(e){out.textContent=e.message}};
  return el;
 }
 function solutionHTML(tex){
@@ -34,7 +34,7 @@ function solutionHTML(tex){
 }
 async function reviewMyAttempt(attempt){
  try{
- const r=await api("review",{attempt});main.innerHTML='<h1>'+h(r.title)+'</h1><p>'+r.score+' / 10 điểm</p>'+r.keys.map((key,i)=>'<details class="box"><summary>Câu '+(i+1)+' · '+Number(r.points[i].toFixed(2))+' điểm</summary>'+(r.prompts[i]?'<p>'+mathText(r.prompts[i])+'</p>':'')+'<p>Đã chọn: '+h(r.answers[i]||"Bỏ trống")+' · Đáp án: '+h(key)+'</p><div>'+(r.solutions[i]?solutionHTML(r.solutions[i]):"Chưa có lời giải cho câu này.")+'</div></details>').join("")+button("Điểm của tôi","historyView()");
+ const r=await api("review",{attempt});main.innerHTML='<h1>'+h(r.title)+'</h1><p>'+r.score+' / 10 điểm</p>'+r.keys.map((key,i)=>'<details class="box"><summary>Câu '+(i+1)+' · '+Number(r.points[i].toFixed(2))+' điểm</summary>'+(r.prompts[i]?'<p>'+pairedPrompt(r.prompts[i],defaultStyle)+'</p>':'')+'<p>Đã chọn: '+h(r.answers[i]||"Bỏ trống")+' · Đáp án: '+h(key)+'</p><div>'+(r.solutions[i]?solutionHTML(r.solutions[i]):"Chưa có lời giải cho câu này.")+'</div></details>').join("")+button("Điểm của tôi","historyView()");
  }catch(e){notifyError(e)}
 }
 async function templatePanel(){
@@ -56,5 +56,7 @@ async function templatePanel(){
  }
  }catch(e){notifyError(e)}
 }
+
+
 
 
