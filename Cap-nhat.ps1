@@ -71,7 +71,7 @@ try {
     if ($VerifyLocalClone) { Write-Host 'Da kiem tra goi cap nhat.'; exit 0 }
     $answer = Read-Host 'Go Y roi nhan Enter de gui mot commit len GitHub (Netlify se build)'
     if ($answer -ne 'Y') { Write-Host 'Da dung truoc khi gui len GitHub.'; exit 0 }
-    git -c 'user.name=Thay An' -c 'user.email=toiyeuvatly5002-jpg@users.noreply.github.com' commit -m 'Chuyen sang PDF Drive, doc dap an va duyet diem tu luan'
+    git -c 'user.name=Thay An' -c 'user.email=toiyeuvatly5002-jpg@users.noreply.github.com' commit -m 'Dat dung tep giao dien PDF va kiem tra build Netlify'
     CheckGit 'Chua tao duoc commit.'
     git push origin HEAD:main
     CheckGit 'GitHub chua nhan ban cap nhat. Xem thong bao phia tren.'
