@@ -1,5 +1,84 @@
 [build]
-  command = "node tools/verify.cjs && node tools/verify-mixed.cjs && node tools/verify-drive.cjs"
+  command = '''
+node -e '
+const fs = require("node:fs");
+const path = require("node:path");
+const crypto = require("node:crypto");
+// Older GitHub uploads placed these files at the repository root.
+// Restore absent files and known old copies in the build directory only.
+const legacy = [
+ [
+  "public/drive-answers.js",
+  ""
+ ],
+ [
+  "public/drive-file.js",
+  ""
+ ],
+ [
+  "public/drive-ui.js",
+  ""
+ ],
+ [
+  "public/drive.css",
+  ""
+ ],
+ [
+  "public/essay.js",
+  "b4a18fe7bdf02f82fe733dd85cd82b2c838844f07ddd396922e69b75dcd911b9"
+ ],
+ [
+  "public/frame-art.js",
+  "100223320e83cdec4a0742cd26b699d2b812aebf969791b66c32f316493e5495"
+ ],
+ [
+  "public/import-ui.js",
+  "537aab60c5de7db8dd045595eb0c47a4e2735eb6d1e971b3b4dc6a97d372d789"
+ ],
+ [
+  "public/index.html",
+  "f7f38a4ea3b8629d0bc3f74cc514235e6a665843961bc535f73d47332d270afa"
+ ],
+ [
+  "public/management.js",
+  "651c82e6d6060e25fe9ae338c0893ed2ed07a843e587692fd08221b4eb4986b6"
+ ],
+ [
+  "public/paired.js",
+  "3b31bcefc1d3514fa430ccee7eacbde155d5b291bb0742f6f0fa895b885c69f8"
+ ],
+ [
+  "public/school.js",
+  "974c64d729cbf42d152e46d09f9eeb3bf98f873374407e7c7e5f7d1fdaa0bb3d"
+ ],
+ [
+  "public/assets/pdfjs/LICENSE",
+  ""
+ ],
+ [
+  "public/assets/pdfjs/pdf.min.mjs",
+  ""
+ ],
+ [
+  "public/assets/pdfjs/pdf.worker.min.mjs",
+  ""
+ ],
+ [
+  "tools/verify-drive.cjs",
+  ""
+ ]
+];
+for (const [target, oldHash] of legacy) {
+  if (fs.existsSync(target)) {
+    const existing = fs.readFileSync(target, "utf8").replace(/\r\n/g, "\n");
+    const hash = crypto.createHash("sha256").update(existing).digest("hex");
+    if (hash !== oldHash) continue;
+  }
+  fs.mkdirSync(path.dirname(target), {recursive:true});
+  fs.copyFileSync(path.basename(target), target);
+}
+' && node tools/verify.cjs && node tools/verify-mixed.cjs && node tools/verify-drive.cjs
+'''
   publish = "public"
   functions = "netlify/functions"
 
