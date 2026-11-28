@@ -17,7 +17,9 @@ const legacy = [
  ],
  [
   "public/drive-ui.js",
-  ""
+  [
+   "3ac57de87a66bdf849049782704f7c29e73bdb9007caeae2873d3248d92b7cfa"
+  ]
  ],
  [
   "public/drive.css",
@@ -41,7 +43,10 @@ const legacy = [
  ],
  [
   "public/index.html",
-  "f7f38a4ea3b8629d0bc3f74cc514235e6a665843961bc535f73d47332d270afa"
+  [
+   "f7f38a4ea3b8629d0bc3f74cc514235e6a665843961bc535f73d47332d270afa",
+   "ae924e2ff76305b34bbadb98abc8504a19cb6d9887cb3561f47e931cbddc7159"
+  ]
  ],
  [
   "public/management.js",
@@ -53,7 +58,10 @@ const legacy = [
  ],
  [
   "public/school.js",
-  "974c64d729cbf42d152e46d09f9eeb3bf98f873374407e7c7e5f7d1fdaa0bb3d"
+  [
+   "974c64d729cbf42d152e46d09f9eeb3bf98f873374407e7c7e5f7d1fdaa0bb3d",
+   "185f684311a1b6216be43260422e4d04ba65f7f71ab8a599e141246a28aa51a7"
+  ]
  ],
  [
   "public/assets/pdfjs/LICENSE",
@@ -74,18 +82,27 @@ const legacy = [
  [
   "tools/verify-time.cjs",
   ""
+ ],
+ [
+  "public/exam-library.js",
+  ""
+ ],
+ [
+  "tools/verify-library.cjs",
+  ""
  ]
 ];
 for (const [target, oldHash] of legacy) {
   if (fs.existsSync(target)) {
     const existing = fs.readFileSync(target, "utf8").replace(/\r\n/g, "\n");
     const hash = crypto.createHash("sha256").update(existing).digest("hex");
-    if (hash !== oldHash) continue;
+    const oldHashes = Array.isArray(oldHash) ? oldHash : [oldHash];
+    if (!oldHashes.includes(hash) || !fs.existsSync(path.basename(target))) continue;
   }
   fs.mkdirSync(path.dirname(target), {recursive:true});
   fs.copyFileSync(path.basename(target), target);
 }
-' && node tools/verify.cjs && node tools/verify-mixed.cjs && node tools/verify-drive.cjs && node tools/verify-time.cjs
+' && node tools/verify.cjs && node tools/verify-mixed.cjs && node tools/verify-drive.cjs && node tools/verify-time.cjs && node tools/verify-library.cjs
 '''
   publish = "public"
   functions = "netlify/functions"

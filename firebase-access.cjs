@@ -2,7 +2,7 @@ const crypto=require("node:crypto");
 const {run,submissionReceipt,scoreSubmission,itemView,validAttempt}=require("./service.cjs");
 const timed=require("./timed-attempt.cjs");
 
-const reads=new Set(["catalog","history","open","accounts","report","templateAdmin","review","gradingQueue","gradingPaper"]);
+const reads=new Set(["catalog","history","open","adminItem","accounts","report","templateAdmin","review","gradingQueue","gradingPaper"]);
 const deny=(status,message)=>{throw Object.assign(Error(message),{status})};
 const value=async ref=>(await ref.get()).val();
 const safeKey=s=>typeof s==="string"&&/^[\w-]{1,180}$/.test(s);
@@ -21,6 +21,7 @@ async function timedRequest(ref,item,code,user,action,b,template,session,digest)
  if(action==="open"){
   slot=await value(latest);
   prior=slot && await value(resultRef(slot.attemptId));
+  if(item.retired&&(!prior||b.retakeAfter))deny(404,"Đề đã được gỡ khỏi thư viện.");
   const retake=prior && !timed.isWorking(prior) && slot.attemptId===b.retakeAfter;
   if(!slot || retake){
    if(!item.durationMinutes){
@@ -65,6 +66,8 @@ async function byItem(ref,id){
   const item=await value(items.child(key));
   if(item?.id===id)return [item];
  }
+ const archived=await value(ref.child("pastItems/"+id));
+ if(archived?.id===id)return [archived];
  // Older publications store the UUID inside a numerically keyed collection.
  const snapshot=await items.get();
  let match;
@@ -85,7 +88,7 @@ async function scoped(ref,action,b,token,address){
  if(!session||session.until<=Date.now()||!/^\d{5}$/.test(session.code))deny(401,"Hãy đăng nhập lại.");
  const code=session.code,user=await value(ref.child("users/"+code));
  if(!user)deny(401,"Hãy đăng nhập lại.");
- if(["accounts","report","templateAdmin","gradingQueue","gradingPaper"].includes(action)&&user.role!=="admin")deny(403,"Chỉ quản trị viên được truy cập.");
+ if(["adminItem","accounts","report","templateAdmin","gradingQueue","gradingPaper"].includes(action)&&user.role!=="admin")deny(403,"Chỉ quản trị viên được truy cập.");
  const db={users:{[code]:user},sessions:{[digest]:session},items:[],results:{}};
  if(action==="catalog")db.items=Object.values(await value(ref.child("items"))||{});
  if(action==="accounts")db.users=await value(ref.child("users"))||{};
@@ -107,11 +110,15 @@ async function scoped(ref,action,b,token,address){
  if(!r||r.code!==code)deny(404,"Không tìm thấy lượt làm của bạn.");
  db.results[b.attempt]=r;db.items=await byItem(ref,r.id);
  }
- if(["open","submit","saveTimed","finishTimed"].includes(action)){
+ if(["adminItem","open","submit","saveTimed","finishTimed"].includes(action)){
   db.items=await byItem(ref,b.id);
-  if(db.items[0]?.type==="drive"){
+  if(action!=="adminItem" && db.items[0]?.type==="drive"){
    const reply=await timedRequest(ref,db.items[0],code,user,action,b,db.template,session,digest);
    if(reply)return reply;
+  }
+  if(action==="open" && db.items[0] && !session.examKey && !db.items[0].retired){
+   const claim=await ref.child("sessions/"+digest+"/examKey").transaction(key=>key||crypto.randomBytes(32).toString("hex"),undefined,false);
+   session.examKey=claim.snapshot.val();
   }
  }
  const result=run(db,action,b,token,address);

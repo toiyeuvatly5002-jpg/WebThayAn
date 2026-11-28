@@ -29,7 +29,7 @@ function bindExamLayout(form){
 function minutesField(value=""){
  return field("Thời gian làm bài (phút)",'<input name="durationMinutes" type="number" inputmode="numeric" min="1" step="1" value="'+h(value||"")+'" placeholder="Để trống nếu không giới hạn">');
 }
-function driveEditor(){
+function driveEditor(existing){
  const form=document.querySelector("#create");
  const content=form.querySelector("#content");
  content.innerHTML=field("PDF đề trên Google Drive",'<input type="url" name="paper" required>')+
@@ -41,8 +41,18 @@ function driveEditor(){
  const f=form.elements,notice=content.querySelector("#keyNotice"),preview=content.querySelector("#parsedKeys");
  let revision=0;
  function clear(){revision++;preview.hidden=true;f.keys.value="";notice.textContent=""}
- f.kind.onchange=()=>{clear();const essay=f.kind.value==="essay";content.querySelector("#keySource").hidden=essay;content.querySelector("#essayCount").hidden=!essay;f.keyUrl.required=!essay;f.count.disabled=!essay};
- f.kind.onchange();f.keyUrl.oninput=clear;
+ f.kind.onchange=()=>{clear();const essay=f.kind.value==="essay";content.querySelector("#keySource").hidden=essay;content.querySelector("#essayCount").hidden=!essay;f.keyUrl.disabled=essay;f.keyUrl.required=!essay;f.count.disabled=!essay};
+ if(existing){
+  f.paper.value=existing.url;f.solution.value=existing.solutionUrl||"";
+  f.durationMinutes.value=existing.durationMinutes||"";f.keyUrl.value=existing.answerKeyUrl||"";
+  if(!existing.answerKeyUrl&&existing.answerSheet.every(key=>key==="TL")){f.kind.value="essay";f.count.value=existing.answerSheet.length}
+ }
+ f.kind.onchange();
+ if(existing&&f.kind.value!=="essay"){
+  f.keyUrl.required=false;f.keys.value=existing.answerSheet.join("\n");preview.hidden=false;
+  notice.textContent="Đã nạp đáp án đang dùng. Thầy có thể sửa trực tiếp hoặc đọc tệp đáp án mới.";
+ }
+ f.keyUrl.oninput=()=>{clear();f.keyUrl.required=true};
  content.querySelector("#readDrive").onclick=async()=>{
   clear();const run=revision;
   try{
@@ -57,6 +67,6 @@ function driveEditor(){
   const url=driveFile(f.paper.value).view,solutionUrl=driveFile(f.solution.value).view;
   if(f.kind.value!=="essay"&&preview.hidden)throw Error("Bấm Đọc đáp án trước khi đăng.");
   const keys=f.kind.value==="essay"?Array(Number(f.count.value)).fill("TL"):sheetKeys(f.keys.value);
-  return {type:"drive",url,solutionUrl,answerSheet:keys,durationMinutes:Number(f.durationMinutes.value)};
+  return {type:"drive",url,solutionUrl,answerSheet:keys,answerKeyUrl:f.kind.value==="essay"?"":f.keyUrl.value,durationMinutes:Number(f.durationMinutes.value)};
  };
 }

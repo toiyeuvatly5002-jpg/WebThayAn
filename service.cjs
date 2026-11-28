@@ -5,7 +5,7 @@ const fail=(status,message)=>{throw Object.assign(Error(message),{status})};
 const {driveFile}=require("./public/drive-file.js");
 const hash=s=>crypto.createHash("sha256").update(s).digest("hex");
 const timed=require("./timed-attempt.cjs");
-const adminActions=["setDuration","accounts","issue","publish","report","templateAdmin","setTemplate","gradingQueue","gradingPaper","approveGrade"];
+const adminActions=["adminItem","updateItem","deleteItem","setDuration","accounts","issue","publish","report","templateAdmin","setTemplate","gradingQueue","gradingPaper","approveGrade"];
 function seed(admin,student){
  if(!/^\d{5}$/.test(admin)||student===admin)throw Error("Cần cấu hình mã admin 5 số riêng");
  const users={[admin]:{name:"Thầy An",role:"admin"}};
@@ -23,7 +23,18 @@ function sharedArt(template={},legacy={}){
  }
  return art;
 }
-function cleanItem(item){const {questions,answerSheet,prompts,art,solutions,pdfs,solutionUrl,...rest}=item;return {...rest,count:answerSheet?.length??questions?.length??(item.type==="original"?28:0)}}
+function cleanItem(item){const {questions,answerSheet,answerKeyUrl,prompts,art,solutions,pdfs,solutionUrl,...rest}=item;return {...rest,count:answerSheet?.length??questions?.length??(item.type==="original"?28:0)}}
+function paperById(db,id){return db.items.find(it=>it?.id===id)||db.pastItems?.[id]}
+function currentPaper(db,b){
+ const paper=db.items.find(it=>it?.id===b.id&&!it.retired);
+ if(!paper)fail(409,"Đề này đã được sửa hoặc xóa. Hãy mở lại danh sách đề.");
+ if(b.revision!==(paper.revision||0))fail(409,"Đề vừa được cập nhật. Hãy mở lại bản mới trước khi lưu.");
+ return paper;
+}
+function retirePaper(db,paper){
+ (db.pastItems??={})[paper.id]={...paper,retired:true};
+ if(db.itemLocations)delete db.itemLocations[paper.id];
+}
 function run(db,action,b,token,address){
  const now=Date.now(); db.items??=[];
  if(action==="login"){
@@ -62,14 +73,28 @@ function run(db,action,b,token,address){
  let id;do{id=String(crypto.randomInt(100000)).padStart(5,"0")}while(db.users[id]);
  db.users[id]={name:b.name.trim(),role:b.role};return {code:id};
  }
- if(action==="publish"){
+ if(action==="adminItem"){
+  const paper=db.items.find(it=>it?.id===b.id&&!it.retired);
+  if(!paper)fail(404,"Đề đã được sửa hoặc xóa. Hãy mở lại danh sách.");
+  return {...cleanItem(paper),answerSheet:paper.answerSheet,answerKeyUrl:paper.answerKeyUrl,solutionUrl:paper.solutionUrl};
+ }
+ if(action==="deleteItem"){
+  const paper=currentPaper(db,b);
+  retirePaper(db,paper);
+  db.items.splice(db.items.indexOf(paper),1);
+  return {deleted:true};
+ }
+ if(action==="publish"||action==="updateItem"){
+ const previous=action==="updateItem"?currentPaper(db,b):null;
  const {title,track,category,subject,grade:g,type,url,questions}=b;
  if(typeof title!=="string"||!title.trim()||title.length>160||!Number.isInteger(g)||g<1||g>12||!subjects(g).includes(subject)||!tracks.includes(track)||!categories(track).includes(category)||(track===tracks[1]&&g!==9)||(track===tracks[2]&&g!==12))fail(400,"Kiểm tra thông tin phân loại.");
- const item={id:crypto.randomUUID(),title:title.trim(),grade:g,track,subject,category,type};
+ const metadata={id:crypto.randomUUID(),title:title.trim(),grade:g,track,subject,category,type};
+ const keepLegacy=previous&&previous.type===type&&!["drive","link"].includes(type);
+ const item=keepLegacy?{...previous,...metadata}:metadata;
  if(type==="drive")item.durationMinutes=timed.readMinutes(b.durationMinutes);
  if(type==="link"){if(typeof url!=="string"||!/^https:\/\//i.test(url)||url.length>2048)fail(400,"Cần liên kết HTTPS.");item.url=url}
- else if(["sheet","paired","drive"].includes(type)){
- if(type==="drive"){item.url=driveFile(url).view;item.solutionUrl=driveFile(b.solutionUrl).view}
+ else if(!keepLegacy&&["sheet","paired","drive"].includes(type)){
+ if(type==="drive"){item.url=driveFile(url).view;item.solutionUrl=driveFile(b.solutionUrl).view;if(b.answerKeyUrl)item.answerKeyUrl=driveFile(b.answerKeyUrl).view}
  const list=b.answerSheet;
  if((type==="sheet"&&(typeof url!=="string"||!/^https:\/\//i.test(url)||url.length>2048))||!Array.isArray(list)||!list.length||list.some(v=>typeof v!=="string"||v.length>40||(v==="TL"?!["drive","paired"].includes(type):!/^([A-D]|[ĐS]{4}|[-+]?\d+(?:[.,]\d+)?)$/.test(v))))fail(400,"Kiểm tra liên kết PDF và bảng đáp án.");
  if(type==="paired"){
@@ -82,21 +107,26 @@ function run(db,action,b,token,address){
  }else if(type==="sheet")item.url=url;
  item.answerSheet=list;item.fields=list.map(v=>v==="TL"?"essay":/^[A-D]$/.test(v)?"mc":/^[ĐS]{4}$/.test(v)?"tf":"num");
  }
- else if(type==="quiz"&&Array.isArray(questions)&&questions.length){
+ else if(!keepLegacy&&type==="quiz"&&Array.isArray(questions)&&questions.length){
  item.questions=questions.map(q=>{if(typeof q.text!=="string"||!q.text.trim()||q.text.length>4000||!Array.isArray(q.options)||q.options.length!==4||q.options.some(o=>typeof o!=="string"||!o.trim()||o.length>1000)||!Number.isInteger(q.key)||q.key<0||q.key>3)fail(400,"Cần 4 lựa chọn và đáp án hợp lệ.");return {text:q.text,options:q.options,key:q.key}})
- }else fail(400,"Chọn tài liệu hoặc đề trắc nghiệm.");
+ }else if(!keepLegacy)fail(400,"Chọn tài liệu hoặc đề trắc nghiệm.");
  if(b.solutions!=null){
  const count=item.questions?.length??item.answerSheet?.length;
  if(!Array.isArray(b.solutions)||b.solutions.length!==count||b.solutions.some(v=>typeof v!=="string"||!v.trim()||v.length>(type==="paired"?240000:30000)))fail(400,"Số lời giải phải khớp số câu.");
  item.solutions=b.solutions;
  }
- db.items.push(item);return {id:item.id};
+ if(previous){
+  retirePaper(db,previous);
+  item.seriesId=previous.seriesId||previous.id;
+  db.items[db.items.indexOf(previous)]=item;
+ }else db.items.push(item);
+ return {id:item.id};
  }
  if(action==="gradingQueue")return {rows:Object.entries(db.results).filter(([,r])=>r.status==="pending"&&!timed.isWorking(r,now)).map(([attempt,r])=>({attempt,title:r.title,code:r.code,name:r.name,date:r.date}))};
  if(action==="gradingPaper"||action==="approveGrade"){
   const r=db.results[b.attempt];
   if(!r||timed.isWorking(r,now)||r.status!=="pending")fail(409,"Bài đã được duyệt hoặc không còn chờ chấm.");
-  const paper=db.items.find(item=>item.id===r.id);
+  const paper=paperById(db,r.id);
   if(!paper)fail(404,"Không tìm thấy đề.");
   const essay=paper.fields.flatMap((type,i)=>type==="essay"?[i]:[]);
   const max=10/paper.fields.reduce((sum,t)=>sum+(t==="tf"?1:.25),0)*.25;
@@ -116,14 +146,16 @@ function run(db,action,b,token,address){
  const r=db.results[b.attempt];
  if(!r||r.code!==code||timed.isWorking(r,now))fail(404,"Không tìm thấy lượt làm của bạn.");
  if(r.status==="pending")fail(409,"Bài đang chờ giáo viên duyệt điểm.");
- const paper=db.items.find(x=>x.id===r.id);
+ const paper=paperById(db,r.id);
  return {title:r.title,art:sharedArt(db.template,paper?.art),score:r.total,solutionUrl:paper?.solutionUrl,solutionPdf:paper?.pdfs?.[1],answers:r.answers,keys:r.keys,points:r.points,solutions:paper?.solutions||(paper?.type==="original"?require("./legacy-solutions.json"):[]),prompts:paper?.prompts||paper?.questions?.map(q=>q.text)||[]};
  }
- const item=db.items.find(it=>it.id===b.id);if(!item)fail(404,"Không tìm thấy bài.");
+ const item=paperById(db,b.id);if(!item||item.id!==b.id)fail(404,"Không tìm thấy bài.");
 
  if(action==="setDuration"){
+  if(item.retired)fail(409,"Đề đã được sửa hoặc xóa. Hãy mở lại danh sách.");
   if(item.type!=="drive")fail(400,"Chọn một đề PDF.");
   item.durationMinutes=timed.readMinutes(b.durationMinutes);
+  item.revision=(item.revision||0)+1;
   return {durationMinutes:item.durationMinutes};
  }
  if(item.type==="drive" && ["open","saveTimed","finishTimed","submit"].includes(action)){
@@ -131,6 +163,7 @@ function run(db,action,b,token,address){
   let slot=db.timedLatest?.[owner];
   if(action==="open"){
    const previous=slot && db.results[owner+"_"+slot.attemptId];
+   if(item.retired&&(!previous||b.retakeAfter))fail(404,"Đề đã được gỡ khỏi thư viện.");
    const retake=previous && !timed.isWorking(previous,now) && b.retakeAfter===slot.attemptId;
    if(!slot || retake){
     if(!item.durationMinutes){
@@ -155,11 +188,16 @@ function run(db,action,b,token,address){
   }
   if(action==="submit" && !timed.validFreeTicket(session,item.id,b.attemptId) && (item.durationMinutes || (slot && timed.isWorking(db.results[owner+"_"+slot.attemptId],now))))fail(409,"Hãy mở lại đề để dùng lượt làm có đồng hồ.");
  }
- if(action==="open")return itemView(item,db.template);
+ if(action==="open"){
+  if(item.retired)fail(404,"Đề đã được gỡ khỏi thư viện.");
+  session.examKey??=crypto.randomBytes(32).toString("hex");
+  return {...itemView(item,db.template),freeAttemptId:timed.freeTicket(session,item.id)};
+ }
  if(action==="submit"){
   if(!validAttempt(b.attemptId))fail(400,"Mã lượt làm chưa hợp lệ.");
   const id=code+"_"+item.id+"_"+b.attemptId;
   if(db.results[id])return submissionReceipt(db.results[id],id);
+  if(item.retired&&!timed.validFreeTicket(session,item.id,b.attemptId))fail(409,"Đề đã được gỡ khỏi thư viện.");
   db.results[id]=scoreSubmission(item,b,code,user,now,false);
   return submissionReceipt(db.results[id],id);
  }
@@ -195,7 +233,7 @@ function scoreSubmission(item,b,code,user,now,allowBlankEssay){
   }
   Object.assign(result,{photos,status:"pending"});delete result.total;
  }
- return {...result,...(item.solutionUrl?{solutionUrl:item.solutionUrl}:{}),code,name:user.name,title:item.title,id:item.id,date:now,group:kind(item.track,item.category),answers:b.answers};
+ return {...result,...(item.solutionUrl?{solutionUrl:item.solutionUrl}:{}),code,name:user.name,title:item.title,id:item.id,seriesId:item.seriesId||item.id,date:now,group:kind(item.track,item.category),answers:b.answers};
 }
 function submissionReceipt(r,attempt){
  const result=r.status==="pending"?{status:"pending",attempt,...(r.solutionUrl?{solutionUrl:r.solutionUrl}:{})}:{...r,attempt};
