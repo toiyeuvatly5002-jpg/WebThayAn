@@ -24,6 +24,10 @@ const legacy = [
   ""
  ],
  [
+  "public/exam-clock.js",
+  ""
+ ],
+ [
   "public/essay.js",
   "b4a18fe7bdf02f82fe733dd85cd82b2c838844f07ddd396922e69b75dcd911b9"
  ],
@@ -66,6 +70,10 @@ const legacy = [
  [
   "tools/verify-drive.cjs",
   ""
+ ],
+ [
+  "tools/verify-time.cjs",
+  ""
  ]
 ];
 for (const [target, oldHash] of legacy) {
@@ -77,7 +85,7 @@ for (const [target, oldHash] of legacy) {
   fs.mkdirSync(path.dirname(target), {recursive:true});
   fs.copyFileSync(path.basename(target), target);
 }
-' && node tools/verify.cjs && node tools/verify-mixed.cjs && node tools/verify-drive.cjs
+' && node tools/verify.cjs && node tools/verify-mixed.cjs && node tools/verify-drive.cjs && node tools/verify-time.cjs
 '''
   publish = "public"
   functions = "netlify/functions"
