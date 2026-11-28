@@ -1,7 +1,249 @@
 [
   {
+    "file": "public/index.html",
+    "before": [
+      "e2f8073c8df53ca347e8791a1630bce7b2b0c479"
+    ],
+    "after": "962ac10fb2a66aa8cef2a623627bfa7e0aea4c42",
+    "alternate": "c0eb551f035db709b1eb4f16a83e586f8d8689fc"
+  },
+  {
+    "file": "public/drive-ui.js",
+    "before": [
+      "0000000000000000000000000000000000000000"
+    ],
+    "after": "420e7fc02aef82daaa7dd57b02c079d5466d1193",
+    "alternate": "51e4fafd194cf4257950931c956cd24560a86e20"
+  },
+  {
+    "file": "public/drive-file.js",
+    "before": [
+      "0000000000000000000000000000000000000000"
+    ],
+    "after": "b627c52e27aa5b6fcf44c776191008beea71f218",
+    "alternate": "a2edf688b15f12cd7fa6f88d5af76cb8e44d4410"
+  },
+  {
+    "file": "public/drive-answers.js",
+    "before": [
+      "0000000000000000000000000000000000000000"
+    ],
+    "after": "2d21b83a66a04aa27327540a8b61c3e317cc3beb",
+    "alternate": "5229ff3fc32b5d260b259922c62eb44ba43ddb4d"
+  },
+  {
+    "file": "public/drive.css",
+    "before": [
+      "0000000000000000000000000000000000000000"
+    ],
+    "after": "fd5835799eba4da095b8ac12c28ee002b0c46110",
+    "alternate": "30b794e5f902385f2aee34ee9e7511086a0c51a2"
+  },
+  {
+    "file": "public/assets/pdfjs/LICENSE",
+    "before": [
+      "0000000000000000000000000000000000000000"
+    ],
+    "after": "f433b1a53f5b830a205fd2df78e2b34974656c7b",
+    "alternate": "f433b1a53f5b830a205fd2df78e2b34974656c7b"
+  },
+  {
+    "file": "public/assets/pdfjs/pdf.min.mjs",
+    "before": [
+      "0000000000000000000000000000000000000000"
+    ],
+    "after": "391eba0e3427e87270912ec7b4afd445d230dedd",
+    "alternate": "391eba0e3427e87270912ec7b4afd445d230dedd"
+  },
+  {
+    "file": "public/assets/pdfjs/pdf.worker.min.mjs",
+    "before": [
+      "0000000000000000000000000000000000000000"
+    ],
+    "after": "af365edd5cc8fee013364aee7dd1bdda584a35e2",
+    "alternate": "af365edd5cc8fee013364aee7dd1bdda584a35e2"
+  },
+  {
+    "file": "public/essay.js",
+    "before": [
+      "f8425d0f13210e8bfe14cad6125e7c11f8287aa4",
+      "b00b0bfbcdc7173703656c036031ff5464d65a51"
+    ],
+    "after": "27d82d190f550687e8613c3640cd7a45d3819465",
+    "alternate": "7758b9626d33781911e6734999cb1d1257f50f60"
+  },
+  {
+    "file": "public/management.js",
+    "before": [
+      "07fbe858fd311aa197e79ba836fb673632d99175",
+      "a3e6be33d41cab4cc3341abf6e3c075fec35dff3"
+    ],
+    "after": "f66c04a17a1ed5cec1c366f004cd3501def65a93",
+    "alternate": "f3e12bb830ea5a14f796798754bb1171a2976b58"
+  },
+  {
+    "file": "public/paired.js",
+    "before": [
+      "74bc7114a345348177f427840e77372e975d2195",
+      "01b8154891fec5c6e05da54ffcaadcf223edeac6"
+    ],
+    "after": "5782b25555478be13a8f0a5c2dca76f9462c412d",
+    "alternate": "78a7ca5768e9f91ea9e30786a9d5a968a37b332b"
+  },
+  {
+    "file": "public/school.js",
+    "before": [
+      "a0ddefccfff85d66a8a63dd969edaf099aec9fff",
+      "5393c62b25f25606321b70aad1d19a66466c35ec"
+    ],
+    "after": "46790c1c70dd12c3b363b80790c7e7a38e38f9e6",
+    "alternate": "23d8dfb4e77fc4f33bcbdc39383fbd456c3627d7"
+  },
+  {
+    "file": "public/frame-art.js",
+    "before": [
+      "1fc84c55b1dc6ba6793a42f8ce2590019beae14c",
+      "17dd5e8b6806c88f37f4ad078d5e0a024fee3586"
+    ],
+    "after": "b45c08956dfcf6721ed66f041c1cb0f40d074405",
+    "alternate": "17dd5e8b6806c88f37f4ad078d5e0a024fee3586"
+  },
+  {
+    "file": "public/import-ui.js",
+    "before": [
+      "d6f76c5609f0ddcf364feeaf75db9ee46df76617"
+    ],
+    "after": "fc14ed4f4b649bd5656ec2f983f9e2a2cbbf28df",
+    "alternate": "842f5f3ca16660b743bf5331f8d7e96ded807dba"
+  },
+  {
+    "file": "drive-key.cjs",
+    "before": [
+      "0000000000000000000000000000000000000000"
+    ],
+    "after": "1d861fcac876fe6c92b55b37f0ff8d339f8b4726",
+    "alternate": "5067e131f2e04dd1e0189bb24d93421662adf7d8"
+  },
+  {
+    "file": "service.cjs",
+    "before": [
+      "c454d28ae88af55a21921733ebebd4a5500a9292",
+      "1027f5dab94b4bc83bac5d86c7dcf2325b5e8e1b"
+    ],
+    "after": "1919a11fb2215718d2746285615b8094d0aa4bbb",
+    "alternate": "b7b8298f23448d838184de3e8b001708c7362b9c"
+  },
+  {
     "file": "firebase-access.cjs",
-    "before": "225752d252227e152a40d6317efb0d5cfe2f11dc",
-    "after": "c54131c5e22aecac987eaa46101b6a32595c5a2a"
+    "before": [
+      "225752d252227e152a40d6317efb0d5cfe2f11dc",
+      "c54131c5e22aecac987eaa46101b6a32595c5a2a"
+    ],
+    "after": "c54131c5e22aecac987eaa46101b6a32595c5a2a",
+    "alternate": "c54131c5e22aecac987eaa46101b6a32595c5a2a"
+  },
+  {
+    "file": "api.cjs",
+    "before": [
+      "05b86a36889e9415f8c237591ee4bf89824ddd9a"
+    ],
+    "after": "ef3689276fd27a6326fd9a901be845f65943975d",
+    "alternate": "d03813c4d62e80ac5d345e946a33b89797aaa32b"
+  },
+  {
+    "file": "server.cjs",
+    "before": [
+      "d974e00e1c7e6e789134661a8f77308d13663747"
+    ],
+    "after": "e571c9063b40d10e84adb16b471f2182c900f31e",
+    "alternate": "bcef0645782bf849b28e25112790a88575cb6c09"
+  },
+  {
+    "file": "netlify.toml",
+    "before": [
+      "b4af79648c686bedee9475c882e7eaa5b0d6d55d",
+      "047b2604d0c108cb93fb8db540c052d4aa20ee69"
+    ],
+    "after": "cb5888150803146059990445806b40ae3952c723",
+    "alternate": "e7843a1c0f8c834220af139cac3f490e83fab0f5"
+  },
+  {
+    "file": "package.json",
+    "before": [
+      "9fd2a95d48cb433f65a8d0ec8e9530e711e14ec0",
+      "2e9b1e4ca63a098366a9aac602101eaacc729141"
+    ],
+    "after": "50b97ffeb27aad0819f3c710e9f8cb342280007d",
+    "alternate": "50b97ffeb27aad0819f3c710e9f8cb342280007d"
+  },
+  {
+    "file": "README.md",
+    "before": [
+      "cc3eb306a7d69c8f894ad68ad8de3850d412ea05",
+      "918362884feab6eddf6b83bda15fd2f74f47fa30"
+    ],
+    "after": "bf4961da37e91098afa056fd17ed61f5b89fb397",
+    "alternate": "bf4961da37e91098afa056fd17ed61f5b89fb397"
+  },
+  {
+    "file": "tools/verify-drive.cjs",
+    "before": [
+      "0000000000000000000000000000000000000000"
+    ],
+    "after": "df17eb137422d389fa6a7bba6744554673083ec5",
+    "alternate": "ec8148dc9005206a925c9c4b47a5159d4f13522e"
+  },
+  {
+    "file": "tikz.cjs",
+    "before": [
+      "860661a3016a38d29b9474604996c6e4b3b0c269",
+      "129affa5cffdcb641403330b1f5c497699a6fa4d"
+    ],
+    "after": "0000000000000000000000000000000000000000",
+    "alternate": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "svg-labels.cjs",
+    "before": [
+      "0000000000000000000000000000000000000000",
+      "44f510245be3a23dee5e183614d467e47c1fddec"
+    ],
+    "after": "0000000000000000000000000000000000000000",
+    "alternate": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "vietnamese-glyphs.json",
+    "before": [
+      "0000000000000000000000000000000000000000",
+      "6e691d6e530e50d8142c1269d90b458c4b2df6ab"
+    ],
+    "after": "0000000000000000000000000000000000000000",
+    "alternate": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "tools/verify-tikz.cjs",
+    "before": [
+      "5ff24a51e341a6d32269146097019de03c2d1dce",
+      "2224b10c36dd9aa36148238834180b6fea88130a"
+    ],
+    "after": "0000000000000000000000000000000000000000",
+    "alternate": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "tools/compile-local.cjs",
+    "before": [
+      "50d73c972947b2316b171059df296e62737a386e",
+      "fa45532913008045889f50b1c9d2889cbff77981"
+    ],
+    "after": "0000000000000000000000000000000000000000",
+    "alternate": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "Bien-dich-de.cmd",
+    "before": [
+      "1a119befe8df15ac0422d89a82cd27c49c604d83"
+    ],
+    "after": "0000000000000000000000000000000000000000",
+    "alternate": "0000000000000000000000000000000000000000"
   }
 ]

@@ -15,7 +15,7 @@ async function handle(event,local=false){
  if(local){
  fs.mkdirSync(path.dirname(localPath),{recursive:true});
  const db=fs.existsSync(localPath)?JSON.parse(fs.readFileSync(localPath)):seed(firstAdmin(process.env));
- if(action==="tikz"){run(db,"templateAdmin",{},token,"local");result=await require("./tikz.cjs").render(body.source,body.libraries)}else{apply(db);fs.writeFileSync(localPath+".tmp",JSON.stringify(db));fs.renameSync(localPath+".tmp",localPath);}
+ if(action==="readDriveKey"){run(db,"templateAdmin",{},token,"local");result=await require("./drive-key.cjs").readKey(body.url)}else{apply(db);fs.writeFileSync(localPath+".tmp",JSON.stringify(db));fs.renameSync(localPath+".tmp",localPath);}
  }else{
  const cfg=firebaseConfig(process.env);
  const {getApps,initializeApp,cert}=require("firebase-admin/app");
@@ -23,7 +23,7 @@ async function handle(event,local=false){
  const app=getApps()[0]||initializeApp({credential:cert(cfg.serviceAccount),databaseURL:cfg.databaseURL});
  const ref=getDatabase(app).ref("phongHocV2");
  const {reads,scoped}=require("./firebase-access.cjs");
- if(action==="tikz"){await scoped(ref,"templateAdmin",{},token,"");result=await require("./tikz.cjs").render(body.source,body.libraries)}else if(reads.has(action)||action==="submit"){
+ if(action==="readDriveKey"){await scoped(ref,"templateAdmin",{},token,"");result=await require("./drive-key.cjs").readKey(body.url)}else if(reads.has(action)||action==="submit"){
  result=await scoped(ref,action,body,token,h["x-nf-client-connection-ip"]||"local");
  }else{
  const initial=(await ref.get()).val();

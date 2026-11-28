@@ -46,8 +46,8 @@ try {
         $destination = [IO.Path]::GetFullPath((Join-Path $repo $name))
         if (-not $destination.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase) -or $name -notmatch '^[a-zA-Z0-9_.\-/]+$' -or $name -match '(^|/)\.(\.|git)(/|$)') { throw 'Duong dan tep khong hop le.' }
         $blob = Blob $current $name
-        if ($blob -eq $entry.after) { continue }
-        if ($blob -ne $entry.before) { throw "Tep $name tren GitHub da duoc sua o ban khac. Can ghep thay doi truoc khi dang." }
+        if ($blob -eq $entry.after -or $blob -eq $entry.alternate) { continue }
+        if ($entry.before -notcontains $blob) { throw "Tep $name tren GitHub da duoc sua o ban khac. Can ghep thay doi truoc khi dang." }
         if ($entry.after -match '^0+$') {
             Remove-Item -LiteralPath $destination
         } else {
@@ -60,7 +60,7 @@ try {
     }
     $updated = ReadIndex
     foreach ($entry in $entries) {
-        if ((Blob $updated $entry.file) -ne $entry.after) { throw "Noi dung tep khong khop voi ban da kiem tra: $($entry.file)." }
+        if (@($entry.after,$entry.alternate) -notcontains (Blob $updated $entry.file)) { throw "Noi dung tep khong khop voi ban da kiem tra: $($entry.file)." }
     }
     git diff --cached --quiet
     $difference = $LASTEXITCODE
@@ -71,7 +71,7 @@ try {
     if ($VerifyLocalClone) { Write-Host 'Da kiem tra goi cap nhat.'; exit 0 }
     $answer = Read-Host 'Go Y roi nhan Enter de gui mot commit len GitHub (Netlify se build)'
     if ($answer -ne 'Y') { Write-Host 'Da dung truoc khi gui len GitHub.'; exit 0 }
-    git -c 'user.name=Thay An' -c 'user.email=toiyeuvatly5002-jpg@users.noreply.github.com' commit -m 'Sua mo de, nop bai va xem lai bai tren Firebase'
+    git -c 'user.name=Thay An' -c 'user.email=toiyeuvatly5002-jpg@users.noreply.github.com' commit -m 'Chuyen sang PDF Drive, doc dap an va duyet diem tu luan'
     CheckGit 'Chua tao duoc commit.'
     git push origin HEAD:main
     CheckGit 'GitHub chua nhan ban cap nhat. Xem thong bao phia tren.'

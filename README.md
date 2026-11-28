@@ -33,26 +33,10 @@ Cách dùng máy cá nhân: cài Node.js 22 và chạy các lệnh dưới đây
 
 Ứng dụng cần Netlify Functions để đăng nhập, chấm điểm và kiểm tra quyền. Sử dụng một trong hai cách trên để cả hàm school và giao diện được triển khai cùng nhau. Sau khi cấu hình biến môi trường mới, triển khai lại. ZIP này là dự án triển khai qua Git/CLI; kéo riêng public vào Netlify Drop chỉ đưa lên các tệp tĩnh.
 
-## 3. Mẫu dùng chung
+## Tạo đề PDF
 
-Trong Quản trị → Mẫu dùng chung, giáo viên tải tệp .sty và hai ảnh minh họa một lần. Khi đổi mẫu, chọn tệp thay thế hoặc dùng nút Xóa. Trang tạo đề đọc các thư viện TikZ từ đề và mẫu hiện hành. Để lấy đáp án từ lời giải, dán cả TeX đề và TeX lời giải, để trống ô đáp án và bấm Đọc và kiểm tra.
+Mở Quản trị → Tạo đề và tài liệu, chọn phòng, lớp, môn và nội dung. Dán liên kết chia sẻ Google Drive của PDF đề và PDF lời giải. Cho phép học sinh xem hai tệp. Với tệp đáp án, chọn quyền “Bất kỳ ai có đường liên kết” và cho phép tải xuống để máy chủ đọc được tệp.
 
-## 4. Lời giải và điểm cá nhân
+Với đề trắc nghiệm hoặc đề hỗn hợp, dán link tệp đáp án rồi bấm **Đọc đáp án**. Có thể dùng PDF có lớp văn bản (gồm bảng của đề số 9), TXT UTF-8 mỗi đáp án một dòng, hoặc CSV hai cột với tiêu đề “Câu,Đáp án”. Ví dụ, bốn dòng A, ĐSSĐ, 70,6 và TL tạo bốn câu theo đúng thứ tự. TL mở phần gửi ảnh. Đối chiếu số câu, sửa đáp án trong ô xem trước nếu cần rồi đăng đề. Với đề chỉ tự luận, chọn **Chỉ tự luận** và nhập số câu.
 
-Ở Quản trị → Tạo đề và tài liệu, nhập đề rồi chọn file .tex lời giải hoặc dán nội dung vào ô Lời giải theo câu. Bấm Xem thử để kiểm tra từng câu trước khi đăng. Bộ đọc hỗ trợ các khối hdg/khung trong mẫu Đề 09, lệnh loigiai và văn bản đánh số liên tiếp “Câu 1: …”. Số lời giải phải bằng số câu, thứ tự theo thứ tự của đề. Có thể để trống nếu chưa có lời giải. Công thức dùng KaTeX/MathML. Các lệnh trình bày tài liệu hoặc hình TikZ tùy biến cần bản PDF đã biên dịch để giữ nguyên thiết kế.
-
-Học sinh xem Xem lời giải sau khi nộp, hoặc chọn Điểm của tôi để mở lại kết quả từng lượt. Bài tập/đề thi và kiểm tra định kì có hai thẻ riêng. Máy chủ lấy mã học sinh từ phiên đăng nhập để xác định chủ bài làm. Quản trị viên xem báo cáo điểm trong trang Quản trị.
-
-## Chạy thử cục bộ
-
-Chạy npm test để kiểm tra mã. Muốn chạy web trên máy để thử trước khi triển khai, đặt BOOTSTRAP_ADMIN_CODE trong môi trường của terminal rồi chạy npm start. Máy chủ cục bộ dùng dữ liệu riêng trong .local, ngoài thư mục public.
-
-
-## Nếu trang đăng nhập báo lỗi
-Mã 83917 thuộc bản trải nghiệm ngoại tuyến. Với database mới, dùng mã riêng trong BOOTSTRAP_ADMIN_CODE. Với database đã có tài khoản, dùng mã quản trị đã cấp khi khởi tạo.
-
-Nếu bản cũ báo “Không xử lý được yêu cầu. Kiểm tra cấu hình máy chủ.”, kiểm tra ba biến môi trường phía trên tại đúng site và ngữ cảnh deploy. Đặc biệt, biến tài khoản dịch vụ phải là JSON có private_key, khác với cấu hình Firebase Web App có apiKey. Bản sửa hiển thị thông tin cụ thể cho cấu hình thiếu hoặc sai định dạng. Khi nhận mã tra cứu, tìm chuỗi đó trong Logs → Functions → school để xem mã lỗi kỹ thuật; log chẩn đoán không ghi nội dung khóa hoặc mã đăng nhập. Áp dụng các thay đổi cấu hình trong cùng lượt deploy bản sửa.
-
-## Dán đề và đáp án trực tiếp
-Chọn “Dán TeX đề + TeX đáp án”. Dán đề và bảng đáp án vào hai ô, bấm Đọc và kiểm tra rồi đăng. Dạng văn bản A–D, mẫu cauhoi/phuongan/task, bangdungsai/phatbieuDS và cautlngan được nhận diện. Khi giáo viên bấm Đọc và kiểm tra, Netlify Function biên dịch từng tikzpicture bằng node-tikzjax. Thư viện TikZ có thể khai báo bằng usetikzlibrary trong đề. Hình SVG được lưu cùng đề và hiển thị qua thẻ ảnh. Macro tự định nghĩa bên ngoài khối hình hoặc package ngoài bộ hỗ trợ có thể cần điều chỉnh. Máy chủ giữ khóa đáp án và trả kết quả sau khi nộp.
-
+Học sinh xem PDF và điền phiếu trả lời trong hai khung cuộn riêng. Điện thoại dọc xếp đề phía trên và phiếu phía dưới. Có thể chụp ảnh hoặc chọn ảnh cho từng câu tự luận. Lời giải PDF hiện sau khi nộp. Đề chấm tự động trả điểm ngay. Với bài có câu tự luận, giáo viên vào **Chấm tự luận**, xem ảnh, nhập mức đạt và chọn **Duyệt và trả điểm**. Học sinh xem lại trong **Điểm của tôi**.

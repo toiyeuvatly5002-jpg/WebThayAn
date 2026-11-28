@@ -10,7 +10,7 @@ http.createServer(async(req,res)=>{
   }  const url=new URL(req.url,"http://localhost");
   const file=path.resolve(root,"."+decodeURIComponent(url.pathname==="/"?"/index.html":url.pathname));
   if(!file.startsWith(root+path.sep)||!fs.statSync(file).isFile())throw Error();
-  const types={".js":"text/javascript",".css":"text/css",".html":"text/html; charset=utf-8",".png":"image/png",".otf":"font/otf",".pdf":"application/pdf"};
+  const types={".js":"text/javascript",".mjs":"text/javascript",".css":"text/css",".html":"text/html; charset=utf-8",".png":"image/png",".otf":"font/otf",".pdf":"application/pdf"};
   res.setHeader("Content-Type",types[path.extname(file)]||"application/octet-stream");fs.createReadStream(file).pipe(res)
  }catch{res.writeHead(404);res.end()}
 }).listen(4209,"127.0.0.1",()=>console.log("http://127.0.0.1:4209"));

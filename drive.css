@@ -1,0 +1,11 @@
+.drive-work{display:grid;grid-template-columns:minmax(0,3fr) minmax(260px,2fr);gap:14px;height:74vh;height:74dvh;min-height:360px}
+.drive-view,.drive-sheet{min-width:0;min-height:0;background:#fff;border:1px solid #bdd3ee;border-radius:12px}
+.drive-view{display:flex;flex-direction:column;overflow:hidden}
+.drive-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px}
+.drive-view iframe{width:100%;border:0;flex:1;min-height:0;background:#edf3fa}
+.drive-sheet{padding:12px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.drive-sheet fieldset{min-width:0}.drive-sheet input[type=file]{width:100%}
+.drive-sheet h2{font-size:1.2rem}.drive-work .box{padding:12px;margin:8px 0}
+.drive-review .drive-view{height:65vh}
+@media(max-width:660px) and (orientation:portrait){.drive-work{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);height:79vh;height:79dvh;min-height:340px;gap:6px}.drive-heading{padding:4px 10px}.drive-sheet{padding:7px 10px}}
+@media(max-height:560px) and (orientation:landscape){.drive-work{height:85vh;min-height:210px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}}

@@ -28,7 +28,7 @@ function importTools(mode,onRead){
 function sheetQuiz(item){
  const link='<a class="link" href="'+h(item.url)+'" target="_blank" rel="noopener">Mở PDF đề trong tab mới</a>';
  return pdfButton(item.paperPdf,"Mở đề PDF đầy đủ")+(item.url?'<p>'+link+'</p>':'')+item.fields.map((t,i)=>'<fieldset class="box"><legend>'+illustrated("conan",item.art)+'Câu '+(i+1)+'</legend>'+(item.prompts?'<p>'+pairedPrompt(item.prompts[i],item.art)+'</p>':'')+
- (t==="essay"?field("Ảnh bài làm (có thể chọn nhiều trang)",'<input type="file" accept="image/*" multiple required data-essay="'+i+'">'):t==="tf"?Array.from("abcd",(c,j)=>field("Ý "+c,'<select data-index="'+i+'" data-bit="'+j+'"><option value="">Chưa chọn</option><option>Đ</option><option>S</option></select>')).join(""):
+ (t==="essay"?field("Chụp ảnh bài làm",'<input type="file" accept="image/*" capture="environment" data-essay="'+i+'">')+field("Chọn ảnh từ máy",'<input type="file" accept="image/*" multiple data-essay="'+i+'">'):t==="tf"?Array.from("abcd",(c,j)=>field("Ý "+c,'<select data-index="'+i+'" data-bit="'+j+'"><option value="">Chưa chọn</option><option>Đ</option><option>S</option></select>')).join(""):
  t==="num"?field(illustrated("agasa",item.art)+"Đáp số",'<input data-index="'+i+'" maxlength="40" inputmode="decimal">'):
  Array.from("ABCD",c=>'<label class="choice"><input type="radio" name="q'+i+'" data-index="'+i+'" value="'+c+'"> '+c+'</label>').join(""))+'</fieldset>').join("")
 }

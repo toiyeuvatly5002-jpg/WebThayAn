@@ -34,7 +34,7 @@ function solutionHTML(tex){
 }
 async function reviewMyAttempt(attempt){
  try{
- const r=await api("review",{attempt});main.innerHTML='<h1>'+h(r.title)+'</h1><p>'+r.score+' / 10 điểm</p>'+pdfButton(r.solutionPdf,"Mở lời giải PDF")+r.keys.map((key,i)=>'<details class="box"><summary>Câu '+(i+1)+' · '+Number(r.points[i].toFixed(2))+' điểm</summary>'+(r.prompts[i]?'<p>'+pairedPrompt(r.prompts[i],r.art)+'</p>':'')+'<p>Đã chọn: '+(key==="TL"?"Đã nộp ảnh":h(r.answers[i]||"Bỏ trống"))+' · Đáp án: '+h(key)+'</p><div>'+(r.solutions[i]?solutionHTML(r.solutions[i]):"Chưa có lời giải cho câu này.")+'</div></details>').join("")+button("Điểm của tôi","historyView()");
+ const r=await api("review",{attempt});if(r.solutionUrl){main.innerHTML='<h1>'+h(r.title)+'</h1><p>'+r.score+' / 10 điểm</p><div class="drive-review">'+driveViewer(r.solutionUrl,"Lời giải PDF")+'</div>'+r.keys.map((k,i)=>'<p>Câu '+(i+1)+' · '+h(k)+' · '+Number(r.points[i].toFixed(2))+' điểm</p>').join("")+button("Điểm của tôi","historyView()");return}main.innerHTML='<h1>'+h(r.title)+'</h1><p>'+r.score+' / 10 điểm</p>'+pdfButton(r.solutionPdf,"Mở lời giải PDF")+r.keys.map((key,i)=>'<details class="box"><summary>Câu '+(i+1)+' · '+Number(r.points[i].toFixed(2))+' điểm</summary>'+(r.prompts[i]?'<p>'+pairedPrompt(r.prompts[i],r.art)+'</p>':'')+'<p>Đã chọn: '+(key==="TL"?"Đã nộp ảnh":h(r.answers[i]||"Bỏ trống"))+' · Đáp án: '+h(key)+'</p><div>'+(r.solutions[i]?solutionHTML(r.solutions[i]):"Chưa có lời giải cho câu này.")+'</div></details>').join("")+button("Điểm của tôi","historyView()");
  }catch(e){notifyError(e)}
 }
 async function templatePanel(){
