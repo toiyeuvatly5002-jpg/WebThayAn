@@ -28,7 +28,7 @@ try {
         CheckGit 'Khong doc duoc ban kiem tra.'
         git init --quiet --initial-branch=main $repo
         CheckGit 'Khong tao duoc kho kiem tra.'
-        $objects = (Resolve-Path -LiteralPath (Join-Path $source '.git/objects')).Path.Replace('\','/')
+        $objects = (Resolve-Path -LiteralPath (git -C $source rev-parse --path-format=absolute --git-path objects)).Path.Replace('\','/')
         [IO.File]::WriteAllText((Join-Path $repo '.git/objects/info/alternates'), $objects)
         git -C $repo -c core.autocrlf=true checkout --quiet --detach $head
         CheckGit 'Khong mo duoc ban kiem tra.'
@@ -71,7 +71,7 @@ try {
     if ($VerifyLocalClone) { Write-Host 'Da kiem tra goi cap nhat.'; exit 0 }
     $answer = Read-Host 'Go Y roi nhan Enter de gui mot commit len GitHub (Netlify se build)'
     if ($answer -ne 'Y') { Write-Host 'Da dung truoc khi gui len GitHub.'; exit 0 }
-    git -c 'user.name=Thay An' -c 'user.email=toiyeuvatly5002-jpg@users.noreply.github.com' commit -m 'Dat dung tep giao dien PDF va kiem tra build Netlify'
+    git -c 'user.name=Thay An' -c 'user.email=toiyeuvatly5002-jpg@users.noreply.github.com' commit -m 'Them thoi gian lam bai, tu nop bai va xem ngang tren dien thoai'
     CheckGit 'Chua tao duoc commit.'
     git push origin HEAD:main
     CheckGit 'GitHub chua nhan ban cap nhat. Xem thong bao phia tren.'

@@ -4,7 +4,8 @@ const {grade}=require("./grade.cjs");
 const fail=(status,message)=>{throw Object.assign(Error(message),{status})};
 const {driveFile}=require("./public/drive-file.js");
 const hash=s=>crypto.createHash("sha256").update(s).digest("hex");
-const adminActions=["accounts","issue","publish","report","templateAdmin","setTemplate","gradingQueue","gradingPaper","approveGrade"];
+const timed=require("./timed-attempt.cjs");
+const adminActions=["setDuration","accounts","issue","publish","report","templateAdmin","setTemplate","gradingQueue","gradingPaper","approveGrade"];
 function seed(admin,student){
  if(!/^\d{5}$/.test(admin)||student===admin)throw Error("Cần cấu hình mã admin 5 số riêng");
  const users={[admin]:{name:"Thầy An",role:"admin"}};
@@ -31,7 +32,7 @@ function run(db,action,b,token,address){
  const user=typeof b.code==="string"?db.users[b.code]:null;
  if(!/^\d{5}$/.test(b.code)||!user){db.limits[ip]={n:(limit?.until>now?limit.n:0)+1,until:limit?.until>now?limit.until:now+900000};return {status:401,error:"Mã đăng nhập chưa đúng."}}
  delete db.limits[ip];for(const [k,s] of Object.entries(db.sessions))if(s.until<=now)delete db.sessions[k];
- const secret=crypto.randomBytes(32).toString("hex");db.sessions[hash(secret)]={code:b.code,until:now+8*3600000};return {secret,user:{...user,code:b.code}};
+ const secret=crypto.randomBytes(32).toString("hex");db.sessions[hash(secret)]={code:b.code,until:now+8*3600000,examKey:crypto.randomBytes(32).toString("hex")};return {secret,user:{...user,code:b.code}};
  }
  const session=db.sessions[hash(token||"")];if(!session||session.until<=now)fail(401,"Hãy đăng nhập lại.");
  const code=session.code,user=db.users[code];if(adminActions.includes(action)&&user.role!=="admin")fail(403,"Chỉ quản trị viên được truy cập.");
@@ -65,6 +66,7 @@ function run(db,action,b,token,address){
  const {title,track,category,subject,grade:g,type,url,questions}=b;
  if(typeof title!=="string"||!title.trim()||title.length>160||!Number.isInteger(g)||g<1||g>12||!subjects(g).includes(subject)||!tracks.includes(track)||!categories(track).includes(category)||(track===tracks[1]&&g!==9)||(track===tracks[2]&&g!==12))fail(400,"Kiểm tra thông tin phân loại.");
  const item={id:crypto.randomUUID(),title:title.trim(),grade:g,track,subject,category,type};
+ if(type==="drive")item.durationMinutes=timed.readMinutes(b.durationMinutes);
  if(type==="link"){if(typeof url!=="string"||!/^https:\/\//i.test(url)||url.length>2048)fail(400,"Cần liên kết HTTPS.");item.url=url}
  else if(["sheet","paired","drive"].includes(type)){
  if(type==="drive"){item.url=driveFile(url).view;item.solutionUrl=driveFile(b.solutionUrl).view}
@@ -90,10 +92,10 @@ function run(db,action,b,token,address){
  }
  db.items.push(item);return {id:item.id};
  }
- if(action==="gradingQueue")return {rows:Object.entries(db.results).filter(([,r])=>r.status==="pending").map(([attempt,r])=>({attempt,title:r.title,code:r.code,name:r.name,date:r.date}))};
+ if(action==="gradingQueue")return {rows:Object.entries(db.results).filter(([,r])=>r.status==="pending"&&!timed.isWorking(r,now)).map(([attempt,r])=>({attempt,title:r.title,code:r.code,name:r.name,date:r.date}))};
  if(action==="gradingPaper"||action==="approveGrade"){
   const r=db.results[b.attempt];
-  if(!r||r.status!=="pending")fail(409,"Bài đã được duyệt hoặc không còn chờ chấm.");
+  if(!r||timed.isWorking(r,now)||r.status!=="pending")fail(409,"Bài đã được duyệt hoặc không còn chờ chấm.");
   const paper=db.items.find(item=>item.id===r.id);
   if(!paper)fail(404,"Không tìm thấy đề.");
   const essay=paper.fields.flatMap((type,i)=>type==="essay"?[i]:[]);
@@ -107,21 +109,65 @@ function run(db,action,b,token,address){
  }
  if(action==="report"||action==="history"){
  let rows=Object.entries(db.results).map(([attempt,r])=>({...r,attempt})).filter(r=>action==="report"?(!b.code||r.code===b.code):r.code===code);
- rows=rows.filter(r=>b.group?r.group===b.group:r.group!=="periodic");
+ rows=rows.filter(r=>!timed.isWorking(r,now)).filter(r=>b.group?r.group===b.group:r.group!=="periodic");
  return {rows:rows.map(({answers,keys,points,photos,code:owner,...summary})=>({...summary,code:owner})).sort((a,b)=>b.date-a.date)}
  }
  if(action==="review"){
  const r=db.results[b.attempt];
- if(!r||r.code!==code)fail(404,"Không tìm thấy lượt làm của bạn.");
+ if(!r||r.code!==code||timed.isWorking(r,now))fail(404,"Không tìm thấy lượt làm của bạn.");
  if(r.status==="pending")fail(409,"Bài đang chờ giáo viên duyệt điểm.");
  const paper=db.items.find(x=>x.id===r.id);
  return {title:r.title,art:sharedArt(db.template,paper?.art),score:r.total,solutionUrl:paper?.solutionUrl,solutionPdf:paper?.pdfs?.[1],answers:r.answers,keys:r.keys,points:r.points,solutions:paper?.solutions||(paper?.type==="original"?require("./legacy-solutions.json"):[]),prompts:paper?.prompts||paper?.questions?.map(q=>q.text)||[]};
  }
  const item=db.items.find(it=>it.id===b.id);if(!item)fail(404,"Không tìm thấy bài.");
- if(action==="open")return {...cleanItem(item),paperPdf:item.pdfs?.[0],art:sharedArt(db.template,item.art),prompts:item.prompts,questions:item.questions?.map(({key,...q})=>q)};
+
+ if(action==="setDuration"){
+  if(item.type!=="drive")fail(400,"Chọn một đề PDF.");
+  item.durationMinutes=timed.readMinutes(b.durationMinutes);
+  return {durationMinutes:item.durationMinutes};
+ }
+ if(item.type==="drive" && ["open","saveTimed","finishTimed","submit"].includes(action)){
+  const owner=code+"_"+item.id;
+  let slot=db.timedLatest?.[owner];
+  if(action==="open"){
+   const previous=slot && db.results[owner+"_"+slot.attemptId];
+   const retake=previous && !timed.isWorking(previous,now) && b.retakeAfter===slot.attemptId;
+   if(!slot || retake){
+    if(!item.durationMinutes){
+     session.examKey??=crypto.randomBytes(32).toString("hex");
+     return {...itemView(item,db.template),freeAttemptId:timed.freeTicket(session,item.id)};
+    }
+    slot=timed.newSlot(item.durationMinutes,now);
+    (db.timedLatest??={})[owner]=slot;
+   }
+  }
+  if(action==="saveTimed" || action==="finishTimed"){
+   if(!validAttempt(b.attemptId))fail(400,"Mã lượt làm chưa hợp lệ.");
+   const prior=db.results[owner+"_"+b.attemptId];
+   if(!prior?.timed)fail(409,"Hãy mở lại đề để tiếp tục.");
+   slot={attemptId:b.attemptId,deadline:prior.deadline};
+  }
+  if(slot && action!=="submit"){
+   const key=owner+"_"+slot.attemptId;
+   const row=timed.updateRow(db.results[key],slot,item,code,user,action,b,scoreSubmission,now);
+   db.results[key]=row;
+   return action==="open"?timed.openReply(row,key,slot,submissionReceipt,itemView(item,db.template)):timed.timedReply(row,key,slot,submissionReceipt);
+  }
+  if(action==="submit" && !timed.validFreeTicket(session,item.id,b.attemptId) && (item.durationMinutes || (slot && timed.isWorking(db.results[owner+"_"+slot.attemptId],now))))fail(409,"Hãy mở lại đề để dùng lượt làm có đồng hồ.");
+ }
+ if(action==="open")return itemView(item,db.template);
  if(action==="submit"){
- if(!/^[\w-]{12,80}$/.test(b.attemptId))fail(400,"Mã lượt làm chưa hợp lệ.");
- const id=code+"_"+item.id+"_"+b.attemptId;if(db.results[id])return submissionReceipt(db.results[id],id);
+  if(!validAttempt(b.attemptId))fail(400,"Mã lượt làm chưa hợp lệ.");
+  const id=code+"_"+item.id+"_"+b.attemptId;
+  if(db.results[id])return submissionReceipt(db.results[id],id);
+  db.results[id]=scoreSubmission(item,b,code,user,now,false);
+  return submissionReceipt(db.results[id],id);
+ }
+ fail(404,"Không có thao tác này.");
+}
+function validAttempt(id){return typeof id==="string" && /^[\w-]{12,80}$/.test(id)}
+function itemView(item,template){return {...cleanItem(item),paperPdf:item.pdfs?.[0],art:sharedArt(template,item.art),prompts:item.prompts,questions:item.questions?.map(({key,...q})=>q)}}
+function scoreSubmission(item,b,code,user,now,allowBlankEssay){
  if(!Array.isArray(b.answers)||b.answers.some(x=>typeof x!=="string"||x.length>80))fail(400,"Bài làm không hợp lệ.");
  let result;
  if(item.type==="original")result=grade(b.answers);
@@ -143,17 +189,20 @@ function run(db,action,b,token,address){
   for(const [i,t] of item.fields.entries()){
    if(t!=="essay")continue;
    const pages=b.photos?.[i];
+   if(allowBlankEssay && !pages?.length)continue;
    if(!Array.isArray(pages)||!pages.length||pages.some(p=>typeof p!=="string"||!/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]+=*$/.test(p)))fail(400,"Thiếu ảnh JPEG hợp lệ ở câu "+(i+1)+".");
    photos[i]=pages;
   }
   Object.assign(result,{photos,status:"pending"});delete result.total;
  }
- db.results[id]={...result,...(item.solutionUrl?{solutionUrl:item.solutionUrl}:{}),code,name:user.name,title:item.title,id:item.id,date:now,group:kind(item.track,item.category),answers:b.answers}; return submissionReceipt(db.results[id],id);
- }
- fail(404,"Không có thao tác này.");
+ return {...result,...(item.solutionUrl?{solutionUrl:item.solutionUrl}:{}),code,name:user.name,title:item.title,id:item.id,date:now,group:kind(item.track,item.category),answers:b.answers};
 }
-function submissionReceipt(r,attempt){return r.status==="pending"?{status:"pending",attempt,...(r.solutionUrl?{solutionUrl:r.solutionUrl}:{})}:{...r,attempt}}
-module.exports={run,seed,submissionReceipt};
+function submissionReceipt(r,attempt){
+ const result=r.status==="pending"?{status:"pending",attempt,...(r.solutionUrl?{solutionUrl:r.solutionUrl}:{})}:{...r,attempt};
+ if(r.timed)result.autoSubmitted=!r.finishedEarly;
+ return result;
+}
+module.exports={run,seed,submissionReceipt,scoreSubmission,itemView,validAttempt};
 
 
 

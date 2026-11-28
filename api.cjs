@@ -23,7 +23,7 @@ async function handle(event,local=false){
  const app=getApps()[0]||initializeApp({credential:cert(cfg.serviceAccount),databaseURL:cfg.databaseURL});
  const ref=getDatabase(app).ref("phongHocV2");
  const {reads,scoped}=require("./firebase-access.cjs");
- if(action==="readDriveKey"){await scoped(ref,"templateAdmin",{},token,"");result=await require("./drive-key.cjs").readKey(body.url)}else if(reads.has(action)||action==="submit"){
+ if(action==="readDriveKey"){await scoped(ref,"templateAdmin",{},token,"");result=await require("./drive-key.cjs").readKey(body.url)}else if(reads.has(action)||["submit","saveTimed","finishTimed"].includes(action)){
  result=await scoped(ref,action,body,token,h["x-nf-client-connection-ip"]||"local");
  }else{
  const initial=(await ref.get()).val();
@@ -32,7 +32,7 @@ async function handle(event,local=false){
  } if(result.secret||action==="logout"){
  headers["Set-Cookie"]="ph_session="+(result.secret||"")+"; HttpOnly; SameSite=Strict; Path=/; Max-Age="+(action==="logout"?0:28800)+(local?"":"; Secure");delete result.secret;
  }
- return {statusCode:result.status||200,headers,body:JSON.stringify(result)};
+ return {statusCode:Number.isInteger(result.status)?result.status:200,headers,body:JSON.stringify(result)};
  }catch(e){return {headers,...serverFailure(e,operation,requestId)}}
 }
 module.exports={handle};

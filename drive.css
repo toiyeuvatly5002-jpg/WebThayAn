@@ -9,3 +9,10 @@
 .drive-review .drive-view{height:65vh}
 @media(max-width:660px) and (orientation:portrait){.drive-work{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);height:79vh;height:79dvh;min-height:340px;gap:6px}.drive-heading{padding:4px 10px}.drive-sheet{padding:7px 10px}}
 @media(max-height:560px) and (orientation:landscape){.drive-work{height:85vh;min-height:210px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}}
+.exam-tools{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;background:#f6f9fd;padding:4px 0;position:sticky;top:0;z-index:2}
+.exam-clock{white-space:nowrap;font-variant-numeric:tabular-nums}.exam-clock b{color:#154f9d}.exam-clock.urgent b,.save-note[data-error]{color:#913811}
+.save-note{font-size:.86rem;flex:1;min-width:0}.wide-exam{margin-left:auto;min-height:44px}
+#quiz.wide-active{position:fixed;inset:0;z-index:20;margin:0;box-sizing:border-box;width:100vw;height:100vh;width:100dvw;height:100dvh;background:#f6f9fd;display:flex;flex-direction:column;padding:4px 8px;padding: max(4px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+#quiz.wide-active .drive-work{flex:1;min-height:0;height:auto;grid-template-columns:minmax(0,3fr) minmax(0,2fr);grid-template-rows:minmax(0,1fr);gap:6px}
+body:has(#quiz.wide-active){overflow:hidden}.drive-sheet .choice{min-height:44px}
+@media(orientation:portrait){#quiz.wide-active{inset:0 auto auto 100%;width:100vh;height:100vw;width:100dvh;height:100dvw;transform-origin:top left;transform:rotate(90deg);padding:6px max(10px,env(safe-area-inset-bottom)) 6px max(10px,env(safe-area-inset-top))}}

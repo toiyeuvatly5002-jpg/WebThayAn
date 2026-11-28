@@ -1,122 +1,115 @@
 [
   {
-    "file": "public/drive-answers.js",
+    "file": "api.cjs",
     "before": [
-      "0000000000000000000000000000000000000000"
+      "d03813c4d62e80ac5d345e946a33b89797aaa32b"
     ],
-    "after": "2d21b83a66a04aa27327540a8b61c3e317cc3beb",
-    "alternate": "5229ff3fc32b5d260b259922c62eb44ba43ddb4d"
+    "after": "02b1e0a18f15080670b323fadf616441f15101b3",
+    "alternate": "db5d5bbad5ab74644dc297eb62c126a41041d271"
   },
   {
-    "file": "public/drive-file.js",
+    "file": "firebase-access.cjs",
+    "before": [
+      "c54131c5e22aecac987eaa46101b6a32595c5a2a"
+    ],
+    "after": "f55ecf2c1e48c3ef9aa481a8a2dad5d3b1a0ce2e",
+    "alternate": "52d5bb30784f965173d9d66b1e23b22dd7447aba"
+  },
+  {
+    "file": "service.cjs",
+    "before": [
+      "b7b8298f23448d838184de3e8b001708c7362b9c"
+    ],
+    "after": "29d5965a5d57166697bc1bd7589f7d1599554bf0",
+    "alternate": "246591955175398014c5ca524d2a2493bd53f25d"
+  },
+  {
+    "file": "timed-attempt.cjs",
     "before": [
       "0000000000000000000000000000000000000000"
     ],
-    "after": "b627c52e27aa5b6fcf44c776191008beea71f218",
-    "alternate": "a2edf688b15f12cd7fa6f88d5af76cb8e44d4410"
+    "after": "ea39352f56e9ccaf1691f995e1863a61e9737d7c",
+    "alternate": "d98e2c399bfaff086a42d4c2fe52e28b177f8e95"
   },
   {
     "file": "public/drive-ui.js",
     "before": [
-      "0000000000000000000000000000000000000000"
+      "0000000000000000000000000000000000000000",
+      "51e4fafd194cf4257950931c956cd24560a86e20",
+      "420e7fc02aef82daaa7dd57b02c079d5466d1193",
+      "4c8fc266eade161da5386183502484ef83f414ae"
     ],
-    "after": "420e7fc02aef82daaa7dd57b02c079d5466d1193",
-    "alternate": "51e4fafd194cf4257950931c956cd24560a86e20"
+    "after": "1ee5584bcb243730c50153f9e3fa632c0d2da3b5",
+    "alternate": "9b612baf5eb4046eee138e082151d39fe26934c7"
   },
   {
     "file": "public/drive.css",
     "before": [
-      "0000000000000000000000000000000000000000"
+      "0000000000000000000000000000000000000000",
+      "30b794e5f902385f2aee34ee9e7511086a0c51a2",
+      "fd5835799eba4da095b8ac12c28ee002b0c46110",
+      "d70d422db2d45c7e576167d1cb45cea8b0a54b07"
     ],
-    "after": "fd5835799eba4da095b8ac12c28ee002b0c46110",
-    "alternate": "30b794e5f902385f2aee34ee9e7511086a0c51a2"
+    "after": "363913422cdc930232151e4c07adb58fd8547593",
+    "alternate": "aa23d3397f009b2b1d8d15c57c800ce5174c4411"
   },
   {
     "file": "public/essay.js",
     "before": [
-      "f8425d0f13210e8bfe14cad6125e7c11f8287aa4"
+      "f8425d0f13210e8bfe14cad6125e7c11f8287aa4",
+      "7758b9626d33781911e6734999cb1d1257f50f60",
+      "27d82d190f550687e8613c3640cd7a45d3819465",
+      "2327329e8554ccda18da0ab2c51b1c9adf0984a3"
     ],
-    "after": "27d82d190f550687e8613c3640cd7a45d3819465",
-    "alternate": "7758b9626d33781911e6734999cb1d1257f50f60"
+    "after": "a08a76508e54ee4a5f242681684788d5c9119d4e",
+    "alternate": "7e50c3a1cc0a5d8c73df3e5fd6095a0f1598f3be"
   },
   {
-    "file": "public/frame-art.js",
+    "file": "public/exam-clock.js",
     "before": [
-      "1fc84c55b1dc6ba6793a42f8ce2590019beae14c"
+      "0000000000000000000000000000000000000000"
     ],
-    "after": "17dd5e8b6806c88f37f4ad078d5e0a024fee3586",
-    "alternate": "17dd5e8b6806c88f37f4ad078d5e0a024fee3586"
-  },
-  {
-    "file": "public/import-ui.js",
-    "before": [
-      "d6f76c5609f0ddcf364feeaf75db9ee46df76617"
-    ],
-    "after": "842f5f3ca16660b743bf5331f8d7e96ded807dba",
-    "alternate": "842f5f3ca16660b743bf5331f8d7e96ded807dba"
+    "after": "5d779bc0a6fe2fe6c27ca923f3726865deb46525",
+    "alternate": "6b27363f3a8ec040d8f4035c1f4852888fc154fa"
   },
   {
     "file": "public/index.html",
     "before": [
-      "e2f8073c8df53ca347e8791a1630bce7b2b0c479"
+      "e2f8073c8df53ca347e8791a1630bce7b2b0c479",
+      "c0eb551f035db709b1eb4f16a83e586f8d8689fc",
+      "962ac10fb2a66aa8cef2a623627bfa7e0aea4c42"
     ],
-    "after": "c0eb551f035db709b1eb4f16a83e586f8d8689fc",
-    "alternate": "c0eb551f035db709b1eb4f16a83e586f8d8689fc"
+    "after": "25cf208c20295d45ab3da7962dbbfc6aae75c38d",
+    "alternate": "41368541cc0dcf4cc0bfec0134b4b6ae6f50da08"
   },
   {
     "file": "public/management.js",
     "before": [
-      "07fbe858fd311aa197e79ba836fb673632d99175"
+      "07fbe858fd311aa197e79ba836fb673632d99175",
+      "f3e12bb830ea5a14f796798754bb1171a2976b58",
+      "f66c04a17a1ed5cec1c366f004cd3501def65a93",
+      "695897503e178689858baac9584c44a24bd65ed4"
     ],
-    "after": "f3e12bb830ea5a14f796798754bb1171a2976b58",
-    "alternate": "f3e12bb830ea5a14f796798754bb1171a2976b58"
-  },
-  {
-    "file": "public/paired.js",
-    "before": [
-      "74bc7114a345348177f427840e77372e975d2195"
-    ],
-    "after": "78a7ca5768e9f91ea9e30786a9d5a968a37b332b",
-    "alternate": "78a7ca5768e9f91ea9e30786a9d5a968a37b332b"
+    "after": "f403ccebe4a0fb3c963dab118b8763dee8163aec",
+    "alternate": "c08338293b95e18a5e993630afd8c1970949dc31"
   },
   {
     "file": "public/school.js",
     "before": [
-      "a0ddefccfff85d66a8a63dd969edaf099aec9fff"
+      "a0ddefccfff85d66a8a63dd969edaf099aec9fff",
+      "23d8dfb4e77fc4f33bcbdc39383fbd456c3627d7",
+      "46790c1c70dd12c3b363b80790c7e7a38e38f9e6",
+      "6868927d73348ec1d5093eabe50d148a62e576cd"
     ],
-    "after": "23d8dfb4e77fc4f33bcbdc39383fbd456c3627d7",
-    "alternate": "23d8dfb4e77fc4f33bcbdc39383fbd456c3627d7"
+    "after": "ed4a4037ff0567137e180d11cccc759058f2c5d2",
+    "alternate": "c274a2c1db484f96611726071b2bbdb7010da51e"
   },
   {
-    "file": "public/assets/pdfjs/LICENSE",
+    "file": "tools/verify-time.cjs",
     "before": [
       "0000000000000000000000000000000000000000"
     ],
-    "after": "f433b1a53f5b830a205fd2df78e2b34974656c7b",
-    "alternate": "f433b1a53f5b830a205fd2df78e2b34974656c7b"
-  },
-  {
-    "file": "public/assets/pdfjs/pdf.min.mjs",
-    "before": [
-      "0000000000000000000000000000000000000000"
-    ],
-    "after": "391eba0e3427e87270912ec7b4afd445d230dedd",
-    "alternate": "391eba0e3427e87270912ec7b4afd445d230dedd"
-  },
-  {
-    "file": "public/assets/pdfjs/pdf.worker.min.mjs",
-    "before": [
-      "0000000000000000000000000000000000000000"
-    ],
-    "after": "af365edd5cc8fee013364aee7dd1bdda584a35e2",
-    "alternate": "af365edd5cc8fee013364aee7dd1bdda584a35e2"
-  },
-  {
-    "file": "tools/verify-drive.cjs",
-    "before": [
-      "0000000000000000000000000000000000000000"
-    ],
-    "after": "df17eb137422d389fa6a7bba6744554673083ec5",
-    "alternate": "ec8148dc9005206a925c9c4b47a5159d4f13522e"
+    "after": "a3b120c1949526ed41927288eeb3ba28f28f5f40",
+    "alternate": "ce0943d1a2e20744b85698d611855f61a89ceb3a"
   }
 ]

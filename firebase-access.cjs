@@ -1,10 +1,61 @@
 const crypto=require("node:crypto");
-const {run,submissionReceipt}=require("./service.cjs");
+const {run,submissionReceipt,scoreSubmission,itemView,validAttempt}=require("./service.cjs");
+const timed=require("./timed-attempt.cjs");
 
 const reads=new Set(["catalog","history","open","accounts","report","templateAdmin","review","gradingQueue","gradingPaper"]);
 const deny=(status,message)=>{throw Object.assign(Error(message),{status})};
 const value=async ref=>(await ref.get()).val();
 const safeKey=s=>typeof s==="string"&&/^[\w-]{1,180}$/.test(s);
+async function timedRequest(ref,item,code,user,action,b,template,session,digest){
+ const owner=code+"_"+item.id;
+ const latest=ref.child("timedLatest/"+owner);
+ const resultRef=id=>ref.child("results/"+owner+"_"+id);
+ if(action==="submit"){
+  if(timed.validFreeTicket(session,item.id,b.attemptId))return null;
+  if(item.durationMinutes)deny(409,"Hãy mở lại đề để dùng lượt làm có đồng hồ.");
+  const slot=await value(latest);
+  if(slot && timed.isWorking(await value(resultRef(slot.attemptId))))deny(409,"Lượt làm đang có đồng hồ.");
+  return null;
+ }
+ let slot,prior;
+ if(action==="open"){
+  slot=await value(latest);
+  prior=slot && await value(resultRef(slot.attemptId));
+  const retake=prior && !timed.isWorking(prior) && slot.attemptId===b.retakeAfter;
+  if(!slot || retake){
+   if(!item.durationMinutes){
+    if(!session.examKey){
+     const keyRef=ref.child("sessions/"+digest+"/examKey");
+     const claim=await keyRef.transaction(key=>key||crypto.randomBytes(32).toString("hex"),undefined,false);
+     session.examKey=claim.snapshot.val();
+    }
+    return {...itemView(item,template),freeAttemptId:timed.freeTicket(session,item.id)};
+   }
+   const expected=slot?.attemptId;
+   const proposed=timed.newSlot(item.durationMinutes);
+   const claim=await latest.transaction(current=>{
+    if(!current || current.attemptId===expected)return proposed;
+    return current;
+   },undefined,false);
+   slot=claim.snapshot.val();
+   prior=await value(resultRef(slot.attemptId));
+  }
+ }else{
+  if(!validAttempt(b.attemptId))deny(400,"Mã lượt làm chưa hợp lệ.");
+  prior=await value(resultRef(b.attemptId));
+  if(!prior?.timed)deny(409,"Hãy mở lại đề để tiếp tục.");
+  slot={attemptId:b.attemptId,deadline:prior.deadline};
+ }
+ const target=resultRef(slot.attemptId);
+ let row=prior;
+ const editing=action==="finishTimed"||Object.keys(b.changes||{}).length||Object.keys(b.photos||{}).length;
+ if(!row || (action!=="open" && editing && timed.isWorking(row))){
+  const write=await target.transaction(current=>timed.updateRow(current||prior,slot,item,code,user,action,b,scoreSubmission),undefined,false);
+  row=write.snapshot.val();
+ }
+ const key=owner+"_"+slot.attemptId;
+ return action==="open"?timed.openReply(row,key,slot,submissionReceipt,itemView(item,template)):timed.timedReply(row,key,slot,submissionReceipt);
+}
 async function byItem(ref,id){
  if(!safeKey(id))deny(404,"Không tìm thấy bài.");
  const items=ref.child("items");
@@ -56,7 +107,13 @@ async function scoped(ref,action,b,token,address){
  if(!r||r.code!==code)deny(404,"Không tìm thấy lượt làm của bạn.");
  db.results[b.attempt]=r;db.items=await byItem(ref,r.id);
  }
- if(action==="open"||action==="submit")db.items=await byItem(ref,b.id);
+ if(["open","submit","saveTimed","finishTimed"].includes(action)){
+  db.items=await byItem(ref,b.id);
+  if(db.items[0]?.type==="drive"){
+   const reply=await timedRequest(ref,db.items[0],code,user,action,b,db.template,session,digest);
+   if(reply)return reply;
+  }
+ }
  const result=run(db,action,b,token,address);
  if(action!=="submit")return result;
  const id=result.attempt;
