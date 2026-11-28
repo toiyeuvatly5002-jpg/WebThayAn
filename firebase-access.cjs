@@ -7,7 +7,25 @@ const value=async ref=>(await ref.get()).val();
 const safeKey=s=>typeof s==="string"&&/^[\w-]{1,180}$/.test(s);
 async function byItem(ref,id){
  if(!safeKey(id))deny(404,"Không tìm thấy bài.");
- return Object.values(await value(ref.child("items").orderByChild("id").equalTo(id))||{});
+ const items=ref.child("items");
+ const location=ref.child("itemLocations/"+id);
+ const key=await value(location);
+ if(safeKey(key)){
+  const item=await value(items.child(key));
+  if(item?.id===id)return [item];
+ }
+ // Older publications store the UUID inside a numerically keyed collection.
+ const snapshot=await items.get();
+ let match;
+ snapshot.forEach(child=>{
+  const item=child.val();
+  if(item?.id!==id)return false;
+  match={key:child.key,item};
+  return true;
+ });
+ if(!match)return [];
+ try{await location.set(match.key)}catch{console.warn("school: item location could not be cached")}
+ return [match.item];
 }
 // Load only the authenticated student's history, never the whole school ledger.
 async function scoped(ref,action,b,token,address){
@@ -25,7 +43,7 @@ async function scoped(ref,action,b,token,address){
  const owner=action==="history"?code:b.code;
  if(owner&&!/^\d{5}$/.test(owner))deny(400,"Mã học sinh không hợp lệ.");
  const query=ref.child("results");
- db.results=await value(owner?query.orderByKey().startAt(owner+"_").endAt(owner+"_\uf8ff"):query)||{};
+ db.results=owner?(await query.orderByKey().startAt(owner+"_").endAt(owner+"_\uf8ff").once("value")).val()||{}:await value(query)||{};
  }
  if(action==="gradingQueue")db.results=await value(ref.child("results"))||{};
  if(action==="gradingPaper"){
