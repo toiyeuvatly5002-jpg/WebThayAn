@@ -35,7 +35,7 @@ Cách dùng máy cá nhân: cài Node.js 22 và chạy các lệnh dưới đây
 
 ## 3. Mẫu dùng chung
 
-Quản trị → Mẫu dùng chung. Ban đầu website dùng ảnh Conan, Agasa và quy ước của PackageForDayThemVatLy12.sty được đóng gói trong bản triển khai. Chọn tệp mới để thay thế ngay tại cùng một vị trí. Nút Xóa tắt thành phần đó; chọn tệp mới để bật lại. Hai ảnh tải lên được thu nhỏ trước khi lưu. Với mẫu tùy chỉnh web lưu một bản mã .sty và một ảnh cho mỗi vai trò. Các đề dùng mẫu hiện hành khi mở. Nội dung đã biên dịch bên trong PDF Drive vẫn thuộc file PDF gốc.
+Trong Quản trị → Mẫu dùng chung, giáo viên tải tệp .sty và hai ảnh minh họa một lần. Khi đổi mẫu, chọn tệp thay thế hoặc dùng nút Xóa. Trang tạo đề đọc các thư viện TikZ từ đề và mẫu hiện hành. Để lấy đáp án từ lời giải, dán cả TeX đề và TeX lời giải, để trống ô đáp án và bấm Đọc và kiểm tra.
 
 ## 4. Lời giải và điểm cá nhân
 

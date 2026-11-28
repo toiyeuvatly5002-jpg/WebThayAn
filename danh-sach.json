@@ -1,0 +1,102 @@
+[
+  {
+    "file": "README.md",
+    "before": "cc3eb306a7d69c8f894ad68ad8de3850d412ea05",
+    "after": "918362884feab6eddf6b83bda15fd2f74f47fa30"
+  },
+  {
+    "file": "netlify.toml",
+    "before": "b4af79648c686bedee9475c882e7eaa5b0d6d55d",
+    "after": "047b2604d0c108cb93fb8db540c052d4aa20ee69"
+  },
+  {
+    "file": "package.json",
+    "before": "9fd2a95d48cb433f65a8d0ec8e9530e711e14ec0",
+    "after": "2e9b1e4ca63a098366a9aac602101eaacc729141"
+  },
+  {
+    "file": "public/PackageForDayThemVatLy12.sty",
+    "before": "a95e867cedc530b934e6ad80a18f14a88a8da357",
+    "after": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "public/agasa.png",
+    "before": "896c3064763aa024e6dc14854ad2d88306131c04",
+    "after": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "public/assets/PackageForDayThemVatLy12.sty",
+    "before": "a95e867cedc530b934e6ad80a18f14a88a8da357",
+    "after": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "public/assets/agasa.png",
+    "before": "896c3064763aa024e6dc14854ad2d88306131c04",
+    "after": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "public/assets/conan.png",
+    "before": "b7c1d033a56f5f2de0900a1ace1ec346aa8202fa",
+    "after": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "public/conan.png",
+    "before": "b7c1d033a56f5f2de0900a1ace1ec346aa8202fa",
+    "after": "0000000000000000000000000000000000000000"
+  },
+  {
+    "file": "public/essay.js",
+    "before": "f8425d0f13210e8bfe14cad6125e7c11f8287aa4",
+    "after": "b00b0bfbcdc7173703656c036031ff5464d65a51"
+  },
+  {
+    "file": "public/frame-art.js",
+    "before": "1fc84c55b1dc6ba6793a42f8ce2590019beae14c",
+    "after": "17dd5e8b6806c88f37f4ad078d5e0a024fee3586"
+  },
+  {
+    "file": "public/management.js",
+    "before": "07fbe858fd311aa197e79ba836fb673632d99175",
+    "after": "a3e6be33d41cab4cc3341abf6e3c075fec35dff3"
+  },
+  {
+    "file": "public/paired.js",
+    "before": "74bc7114a345348177f427840e77372e975d2195",
+    "after": "01b8154891fec5c6e05da54ffcaadcf223edeac6"
+  },
+  {
+    "file": "public/school.js",
+    "before": "a0ddefccfff85d66a8a63dd969edaf099aec9fff",
+    "after": "5393c62b25f25606321b70aad1d19a66466c35ec"
+  },
+  {
+    "file": "service.cjs",
+    "before": "c454d28ae88af55a21921733ebebd4a5500a9292",
+    "after": "1027f5dab94b4bc83bac5d86c7dcf2325b5e8e1b"
+  },
+  {
+    "file": "svg-labels.cjs",
+    "before": "0000000000000000000000000000000000000000",
+    "after": "44f510245be3a23dee5e183614d467e47c1fddec"
+  },
+  {
+    "file": "tikz.cjs",
+    "before": "860661a3016a38d29b9474604996c6e4b3b0c269",
+    "after": "129affa5cffdcb641403330b1f5c497699a6fa4d"
+  },
+  {
+    "file": "tools/compile-local.cjs",
+    "before": "50d73c972947b2316b171059df296e62737a386e",
+    "after": "fa45532913008045889f50b1c9d2889cbff77981"
+  },
+  {
+    "file": "tools/verify-tikz.cjs",
+    "before": "5ff24a51e341a6d32269146097019de03c2d1dce",
+    "after": "2224b10c36dd9aa36148238834180b6fea88130a"
+  },
+  {
+    "file": "vietnamese-glyphs.json",
+    "before": "0000000000000000000000000000000000000000",
+    "after": "6e691d6e530e50d8142c1269d90b458c4b2df6ab"
+  }
+]

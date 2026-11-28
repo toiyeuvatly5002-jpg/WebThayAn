@@ -1,4 +1,5 @@
 function keysFromSolutions(paper, worked) {
+ if(!worked.trim())return keysInPaper(paper);
  const questions = splitPaper(paper);
  const answers = splitPaper(worked);
  const solutions = parseSolutions(worked, questions.length);
@@ -14,10 +15,27 @@ function keysFromSolutions(paper, worked) {
      if (parts.map(x=>x[1].toLowerCase()).join("") !== "abcd") fail();
      return parts.map(x=>x[2].toLowerCase()==="đúng"?"Đ":"S").join("");
    }
-   const pattern = question.type === "cautlngan" ? /Trả lời ngắn\s*:\s*([-+]?\d+(?:[.,]\d+)?)\s*\}/gi : /(?:Chọn\s+|Đáp án(?: đúng)?\s*:\s*)([A-D])\s*[.!]?\s*\}/gi;
+   const pattern = question.type === "cautlngan" ? /(?:Trả lời ngắn|Đáp án(?: đúng)?)\s*[:：]\s*([-+]?\d+(?:[.,]\d+)?)[ \t]*[.]?[ \t]*(?=\}|$)/gmi : /(?:Chọn\s+|Đáp án(?: đúng)?\s*[:：]\s*)([A-D])[ \t]*[.!]?[ \t]*(?=\}|$)/gmi;
    const matches = [...solution.matchAll(pattern)];
    if (matches.length !== 1) fail();
    return matches[0][1].toUpperCase();
+ }).join("\n");
+}
+function keysInPaper(source){
+ // Keep answer comments for extraction. The student-facing parser drops comments.
+ const blocks=splitPaper(source.replace(/^[ \t]*%+[ \t]*(?=Đáp án(?: đúng)?\s*[:：])/gmi,""));
+ if(!blocks.length)throw Error("Dán TeX đề trước khi đọc đáp án.");
+ return blocks.map((block,i)=>{
+  if(isEssay(block))return "TL";
+  const after=blocks[i+1]?.gap??source.slice(source.lastIndexOf("\\end{"+block.type+"}")+("\\end{"+block.type+"}").length);
+  const extra=after.match(/^\s*%?\s*(Đáp án(?: đúng)?\s*[:：][^\r\n]+)/i)?.[1]||"";
+  const keys=new Set([...((block.src+"\n"+extra).matchAll(/^[ \t]*Đáp án(?: đúng)?\s*[:：][ \t]*(TL|[ĐS]{4}|[A-D]|[-+]?\d+(?:[.,]\d+)?)[ \t]*\.?[ \t]*$/gmi))].map(m=>m[1].toUpperCase()));
+  if(/\\choice\b|\\begin\{phuongan\}/.test(block.src)){
+   const options=block.src.includes("\\choice")?latexArgs(block.src.split(/\\choice\b/)[1],4):block.src.split("\\begin{phuongan}")[1].split("\\end{phuongan}")[0].split(/\\task\b/).slice(1);
+   options.forEach((option,j)=>{if(/\\True\b/.test(option))keys.add("ABCD"[j])});
+  }
+  if(keys.size!==1)throw Error("Câu "+(i+1)+(keys.size?" có đáp án mâu thuẫn.":" chưa có đáp án. Dán thêm TeX lời giải hoặc bảng đáp án."));
+  return [...keys][0];
  }).join("\n");
 }
 function isEssay(block) {
@@ -42,7 +60,27 @@ function tikzLibrariesFrom(...sources) {
  }
  return [...names].join(",");
 }
-async function pairedPaper(source,answerText,template={}){
+async function compileFigures(text, libraries, renderFigure, location) {
+ const pattern=/\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/g;
+ const tokens=[];
+ let result="",last=0;
+ for(const match of text.matchAll(pattern)){
+  const source=match[0];
+  const names=new Set(libraries.split(",").filter(Boolean));
+  if(/\bdecoration\s*=\s*\{\s*(?:coil|zigzag|snake|random steps)\b/.test(source))names.add("decorations.pathmorphing");
+  if(/\bdecoration\s*=\s*\{\s*markings\b/.test(source))names.add("decorations.markings");
+  if(/(?:[>=]\s*|\{)(?:Latex|Stealth)\b/.test(source))names.add("arrows.meta");
+  try{
+   const {data}=await renderFigure({source,libraries:[...names].join(",")});
+   const token="[[diagram:"+data+"]]";
+   tokens.push(token);
+   result+=text.slice(last,match.index)+token;
+   last=match.index+source.length;
+  }catch(e){throw Error(location+", hình "+(tokens.length+1)+": "+e.message)}
+ }
+ return {text:result+text.slice(last),tokens};
+}
+async function pairedPaper(source,answerText,template={},renderFigure=body=>api("tikz",body)){
  const keys=sheetKeys(answerText),blocks=splitPaper(markTemplateImages(source,template.imageNames));
  if(keys.length!==blocks.length)throw Error("Đề có "+blocks.length+" câu, bảng có "+keys.length+" đáp án.");
  const libraries=tikzLibrariesFrom(source,template.style?.source||"");
@@ -52,13 +90,9 @@ async function pairedPaper(source,answerText,template={}){
  if(common){context=common[3].replace(/\\\\\[[^\]]*\]/g,"").trim();remaining=Number(common[2])-Number(common[1])+1}
  const prefix=remaining>0?(remaining--,context+"\n\n"):"";
  let text,format;
- let src=raw;const tokens=[];
- for(const match of raw.matchAll(/\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/g)){
- try{const {data}=await api("tikz",{source:match[0],libraries});
- const token="[[diagram:"+data+"]]";tokens.push(token);src=src.replace(match[0],()=>token)
- }catch(e){throw Error("Câu "+(i+1)+", hình "+(tokens.length+1)+": "+e.message)}
- }
- src=src.replace(/\\begin\{figure\}(?:\[[^\]]*\])?|\\end\{figure\}|\\centering\b/g,"");
+ const figure=await compileFigures(raw,libraries,renderFigure,"Câu "+(i+1));
+ const tokens=figure.tokens;
+ let src=figure.text.replace(/\\begin\{figure\}(?:\[[^\]]*\])?|\\end\{figure\}|\\centering\b/g,"");
  if(isEssay({type,src})){
  const body=src.split(/\\noidung\s*/)[1];
  text=prefix+(body?latexArgs(body,1)[0]:src.trim());format="essay";
@@ -78,15 +112,70 @@ async function pairedPaper(source,answerText,template={}){
  return {keys,prompts};
 }
 function pairedPrompt(text,art){
- return inlineArt(mathText(text),art).replace(/\[\[diagram:([A-Za-z0-9+/=]+)\]\]/g,(_,data)=>'<img style="max-width:100%;height:auto" alt="Hình TikZ" src="data:image/svg+xml;base64,'+data+'">').replace(/\[\[paper-image:(\d+)\]\]/g,"Hình cũ cần được giáo viên nhập lại từ TeX.");
+ return displayDiagrams(inlineArt(mathText(text),art)).replace(/\[\[paper-image:(\d+)\]\]/g,"Hình cũ cần được giáo viên nhập lại từ TeX.");
+}
+function displayDiagrams(html){
+ return html.replace(/\[\[diagram:([A-Za-z0-9+/=]+)\]\]/g,(_,data)=>'<img style="max-width:100%;height:auto" alt="Hình TikZ" src="data:image/svg+xml;base64,'+data+'">');
 }
 function pairedEditor(onRead){
  content.innerHTML='<section class="importer">'+field("TeX đề",'<textarea id="pairPaper" rows="8" placeholder="Dán nội dung đề tại đây"></textarea>')+field("TeX đáp án (bỏ trống để lấy từ tệp lời giải bên dưới)",'<textarea id="pairKeys" rows="5" placeholder="Dán bảng DapAn…tex hoặc mỗi đáp án một dòng"></textarea>')+'<button type="button" id="pairCheck">Đọc và kiểm tra</button><div id="pairPreview" role="status"></div></section>';
  let version=0;
- function reset(){version++;onRead(null);pairPreview.textContent="";}
+ let generatedKeys=null;
+ const figures=new Map();
+ const paper=document.querySelector("#pairPaper"), keysInput=document.querySelector("#pairKeys");
+ const preview=document.querySelector("#pairPreview"), worked=document.querySelector("#solutionSource");
+ const check=document.querySelector("#pairCheck");
+ function reset(){
+  version++;
+  onRead(null);
+  delete worked.compiledSolutions;
+  preview.replaceChildren();
+  if(generatedKeys!==null && keysInput.value===generatedKeys)keysInput.value="";
+  generatedKeys=null;
+ }
  compilerControls(onRead,reset);
- pairPaper.oninput=pairKeys.oninput=reset;document.querySelector("#solutionSource").addEventListener("input",()=>{if(pairPaper.isConnected)reset()});
- pairCheck.onclick=async()=>{reset();pairPreview.textContent="Đang đọc đề và ghép lời giải…";const id=version;try{const keys=pairKeys.value.trim() || keysFromSolutions(pairPaper.value,document.querySelector("#solutionSource").value);const {template,art}=await api("templateAdmin");const data=await pairedPaper(pairPaper.value,keys,template);if(id!==version)return;onRead(data);pairPreview.innerHTML=data.keys.map((k,i)=>'<details class="keyChip"><summary>Câu '+(i+1)+' · '+h(k)+'</summary>'+pairedPrompt(data.prompts[i],art)+'</details>').join("")}catch(e){if(id===version)pairPreview.textContent=e.message}};
+ paper.oninput=()=>{figures.clear();reset()};
+ keysInput.oninput=()=>{generatedKeys=null;reset()};
+ worked.addEventListener("input",()=>{if(paper.isConnected)reset()});
+ check.onclick=async()=>{
+  reset();
+  const id=version, source=paper.value;
+  const status=document.createElement("p");
+  status.setAttribute("role","status");preview.append(status);
+  try{
+   const supplied=keysInput.value.trim();
+   const solutionSource=worked.value;
+   const answers=sheetKeys(supplied || keysFromSolutions(source,solutionSource));
+   if(answers.length!==splitPaper(source).length)throw Error("Số đáp án và số câu trong đề chưa khớp.");
+   if(!supplied){generatedKeys=answers.join("\n");keysInput.value=generatedKeys}
+   status.textContent="Đã đọc "+answers.length+" đáp án. Đang kiểm tra nội dung và dựng hình…";
+   const {template,art}=await api("templateAdmin");
+   const renderFigure=async body=>{
+    if(id!==version||!paper.isConnected)throw Error("Nội dung đã thay đổi.");
+    const key=JSON.stringify(body);
+    if(!figures.has(key)){
+     const result=await api("tikz",body);
+     if(id===version)figures.set(key,result);
+     return result;
+    }
+    return figures.get(key);
+   };
+   const data=await pairedPaper(source,answers.join("\n"),template,renderFigure);
+   const solutions=parseSolutions(solutionSource,answers.length);
+   if(solutions){
+    const libraries=tikzLibrariesFrom(solutionSource,source,template.style?.source||"");
+    data.solutions=[];
+    for(const [index,solution] of solutions.entries()){
+     const figure=await compileFigures(solution,libraries,renderFigure,"Lời giải câu "+(index+1));
+     data.solutions.push(figure.text);
+    }
+   }
+   if(id!==version||!paper.isConnected)return;
+   worked.compiledSolutions=data.solutions;
+   preview.innerHTML="<p>Đã kiểm tra "+answers.length+" câu.</p>"+data.keys.map((k,i)=>'<details class="keyChip"><summary>Câu '+(i+1)+' · '+h(k)+'</summary>'+pairedPrompt(data.prompts[i],art)+'</details>').join("");
+   onRead(data);
+  }catch(e){
+   if(id===version&&paper.isConnected)status.textContent=e.message+(generatedKeys?" Các đáp án đã đọc đang hiện trong ô TeX đáp án.":"");
+  }
+ };
 }
-
-

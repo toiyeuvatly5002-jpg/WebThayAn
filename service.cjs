@@ -83,7 +83,7 @@ function run(db,action,b,token,address){
  }else fail(400,"Chọn tài liệu hoặc đề trắc nghiệm.");
  if(b.solutions!=null){
  const count=item.questions?.length??item.answerSheet?.length;
- if(!Array.isArray(b.solutions)||b.solutions.length!==count||b.solutions.some(v=>typeof v!=="string"||!v.trim()||v.length>30000))fail(400,"Số lời giải phải khớp số câu.");
+ if(!Array.isArray(b.solutions)||b.solutions.length!==count||b.solutions.some(v=>typeof v!=="string"||!v.trim()||v.length>(type==="paired"?240000:30000)))fail(400,"Số lời giải phải khớp số câu.");
  item.solutions=b.solutions;
  }
  db.items.push(item);return {id:item.id};

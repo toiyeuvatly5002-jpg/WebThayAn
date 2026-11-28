@@ -24,13 +24,13 @@ function solutionInput(){
  const input=el.querySelector("input"),source=el.querySelector("textarea"),out=el.querySelector("[role=status]");
  input.onchange=async()=>{try{if(!input.files[0])return;if(input.files[0].size>650000)throw Error("Tệp lời giải vượt 650 KB.");source.value=await input.files[0].text();source.dispatchEvent(new Event("input"));out.textContent="Đã đọc tệp. Bấm Xem thử để đối chiếu từng câu."}catch(e){out.textContent=e.message}};
  source.oninput=()=>out.textContent="";
- el.querySelector("button").onclick=()=>{try{const count=document.querySelectorAll(".question").length||document.querySelectorAll(".keyChip").length;const list=parseSolutions(source.value,count)||[];out.innerHTML=(count===0&&list.length?"<p>Đã đọc "+list.length+" lời giải. Nhập đề hoặc bảng đáp án để đối chiếu số câu trước khi đăng.</p>":"")+list.map((v,i)=>'<details><summary>Câu '+(i+1)+'</summary>'+solutionHTML(v)+'</details>').join("")}catch(e){out.textContent=e.message}};
+ el.querySelector("button").onclick=()=>{try{const count=document.querySelectorAll(".question").length||document.querySelectorAll(".keyChip").length;const list=source.compiledSolutions||parseSolutions(source.value,count)||[];out.innerHTML=(count===0&&list.length?"<p>Đã đọc "+list.length+" lời giải. Nhập đề hoặc bảng đáp án để đối chiếu số câu trước khi đăng.</p>":"")+list.map((v,i)=>'<details><summary>Câu '+(i+1)+'</summary>'+solutionHTML(v)+'</details>').join("")}catch(e){out.textContent=e.message}};
  return el;
 }
 function solutionHTML(tex){
  const normalized=tex.replace(/\\\\\[\s*\d+(?:\.\d+)?(?:cm|mm|pt|em|ex)\s*\]/g,"\n").replace(/\\begin\{(align\*?|equation\*?)\}([\s\S]*?)\\end\{\1\}/g,(_,env,v)=>"\\["+ (env.startsWith("align")?"\\begin{aligned}"+v+"\\end{aligned}":v)+"\\]");
  const parts=normalized.split(/(\$\$[\s\S]+?\$\$|\$[^$\n]+\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\])/g);
- return parts.map((s,i)=>i%2?mathText(s):h(s).replace(/\\(?:textbf|textit)\{([^{}]*)\}/g,"<strong>$1</strong>").replace(/\\\\(?:\[[^\]]*\])?|\n/g,"<br>")).join("");
+ return displayDiagrams(parts.map((s,i)=>i%2?mathText(s):h(s).replace(/\\(?:textbf|textit)\{([^{}]*)\}/g,"<strong>$1</strong>").replace(/\\\\(?:\[[^\]]*\])?|\n/g,"<br>")).join(""));
 }
 async function reviewMyAttempt(attempt){
  try{
